@@ -159,10 +159,13 @@ export async function syncToCloud() {
     }
 
     if (syncedCount > 0) {
-      toast.success(`${syncedCount} data berhasil dicadangkan ke Cloud`);
+      toast.success(`${syncedCount} data berhasil disinkronkan`);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Sync failed:', err);
+    if (err.message?.includes('JWT')) {
+      toast.error('Sesi login berakhir atau Key Supabase salah. Silakan login ulang.');
+    }
   }
 }
 

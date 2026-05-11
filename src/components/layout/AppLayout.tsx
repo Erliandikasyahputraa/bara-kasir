@@ -34,7 +34,8 @@ export default function AppLayout() {
   useEffect(() => {
     if (session) {
       syncToCloud().finally(() => {
-        setTimeout(() => setIsInitialSync(false), 1500);
+        // Beri waktu lebih lama (3 detik) agar data dari Cloud sempat masuk ke Lokal
+        setTimeout(() => setIsInitialSync(false), 3000);
       });
     } else {
       setIsInitialSync(false);
