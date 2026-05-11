@@ -6,15 +6,19 @@ import { useAuth } from '@/context/AuthContext';
 export default function BottomNav() {
   const { isAdmin } = useAuth();
 
-  const navItems = [
-    { to: '/', icon: Home, label: 'Beranda' },
-    { to: '/cashier', icon: ShoppingCart, label: 'Kasir', isCta: true },
-    { to: '/products', icon: Package, label: 'Produk' },
-    ...(isAdmin ? [
-      { to: '/reports', icon: BarChart3, label: 'Laporan' },
-      { to: '/settings', icon: Settings, label: 'Lainnya' },
-    ] : []),
-  ];
+  const navItems = isAdmin 
+    ? [
+        { to: '/', icon: Home, label: 'Beranda' },
+        { to: '/products', icon: Package, label: 'Produk' },
+        { to: '/cashier', icon: ShoppingCart, label: 'Kasir', isCta: true },
+        { to: '/reports', icon: BarChart3, label: 'Laporan' },
+        { to: '/settings', icon: Settings, label: 'Lainnya' },
+      ]
+    : [
+        { to: '/', icon: Home, label: 'Beranda' },
+        { to: '/cashier', icon: ShoppingCart, label: 'Kasir', isCta: true },
+        { to: '/products', icon: Package, label: 'Produk' },
+      ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg pb-[env(safe-area-inset-bottom)]">

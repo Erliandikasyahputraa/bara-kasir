@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Product, type Category } from '@/lib/db';
 import { useState, useRef } from 'react';
 import { Plus, Search, Edit2, Trash2, Package as PackageIcon, Camera, X, Copy } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { compressImage } from '@/lib/image-utils';
 import { toast } from 'sonner';
 
 export default function Produk() {
+  const { isAdmin } = useAuth();
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -124,10 +126,12 @@ export default function Produk() {
           <PackageIcon className="w-5 h-5 text-primary" />
           Produk
         </h1>
-        <Button size="sm" onClick={openAdd} className="h-9 gap-1.5">
-          <Plus className="w-4 h-4" />
-          Tambah
-        </Button>
+        {isAdmin && (
+          <Button size="sm" onClick={openAdd} className="h-9 gap-1.5">
+            <Plus className="w-4 h-4" />
+            Tambah
+          </Button>
+        )}
       </div>
 
       {/* Search & Filter */}
@@ -198,14 +202,16 @@ export default function Produk() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(p.id!)}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex flex-col gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(p.id!)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

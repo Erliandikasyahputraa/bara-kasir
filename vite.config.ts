@@ -18,29 +18,28 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "kasirgratisan-icon.png", "og-image.png"],
+      includeAssets: ["favicon.ico", "og-image.png"],
       manifest: {
-        name: "KasirGratisan - POS UMKM Gratis",
-        short_name: "KasirGratisan",
-        description: "Aplikasi kasir gratis untuk UMKM Indonesia. Offline & tanpa biaya.",
+        name: "Bara Kasir - POS Pro",
+        short_name: "BaraKasir",
+        description: "Solusi Kasir Profesional untuk Bisnis Anda. Offline-first & Cloud Sync.",
         start_url: "/",
         display: "standalone",
-        background_color: "#0F172A",
-        theme_color: "#F97316",
+        background_color: "#ffffff",
+        theme_color: "#10b981",
         orientation: "any",
         icons: [
           {
-            src: "/kasirgratisan-icon.png",
+            src: "/favicon.ico",
+            sizes: "64x64 32x32 24x24 16x16",
+            type: "image/x-icon"
+          },
+          {
+            src: "/favicon.ico",
             sizes: "192x192",
             type: "image/png",
             purpose: "any"
-          },
-          {
-            src: "/kasirgratisan-icon.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
-          },
+          }
         ],
       },
       workbox: {
