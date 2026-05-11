@@ -309,17 +309,24 @@ export const db = new PosDatabase();
 
 // === SENSOR OTOMATIS (Sync Hooks) ===
 // Setiap kali ada data ditambah/diubah, set isSynced ke 0 agar dikirim ke Cloud
+// Sensor hanya bereaksi jika yang diubah BUKAN kolom isSynced itu sendiri
+const syncHook = (mods: any) => {
+  const keys = Object.keys(mods);
+  if (keys.length === 1 && keys[0] === 'isSynced') return undefined; // Jangan ganggu jika mesin sync yang update
+  return { ...mods, isSynced: 0 };
+};
+
 db.categories.hook('creating', (id, obj) => { obj.isSynced = 0; });
-db.categories.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
+db.categories.hook('updating', syncHook);
 
 db.products.hook('creating', (id, obj) => { obj.isSynced = 0; });
-db.products.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
+db.products.hook('updating', syncHook);
 
 db.suppliers.hook('creating', (id, obj) => { obj.isSynced = 0; });
-db.suppliers.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
+db.suppliers.hook('updating', syncHook);
 
 db.transactions.hook('creating', (id, obj) => { obj.isSynced = 0; });
-db.transactions.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
+db.transactions.hook('updating', syncHook);
 
 // Seed default data
 export async function seedDefaultData() {

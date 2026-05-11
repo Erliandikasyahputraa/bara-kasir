@@ -32,6 +32,12 @@ Log ini mencatat setiap langkah besar dalam pembangunan aplikasi Bara Kasir.
     - Integrasi otomatis saat perangkat kembali Online.
 - **Data Integrity:** Menyesuaikan field transaksi agar cocok dengan struktur tabel di Supabase.
 - **Auto-Sensor:** Implementasi Dexie Hooks agar setiap perubahan data lokal otomatis memicu antrean sinkronisasi ke Cloud secara cerdas.
+- **Bug Fix (Sync Loop):** Memperbaiki logika sensor agar tidak terjadi pengulangan sinkronisasi (infinite loop) saat sistem sedang memperbarui status data.
 
 ---
+
+## 📅 12 Mei 2026 (UI & Visual Feedback)
+- **Header Baru:** Menambahkan Header statis yang menampilkan Nama Toko.
+- **Visual Sync Indicator:** Menambahkan ikon awan di pojok kanan atas untuk memberi tahu User status sinkronisasi (Pending vs Tercadangkan).
+- **Notifikasi Cloud:** Integrasi Toast Notification untuk memberi tahu jumlah data yang berhasil diamankan ke awan.
 *Log akan terus diperbarui seiring berjalannya project...*
