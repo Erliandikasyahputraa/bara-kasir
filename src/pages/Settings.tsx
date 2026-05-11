@@ -376,27 +376,19 @@ export default function Pengaturan() {
       {/* About */}
       <Card className="border-0 shadow-sm">
         <CardContent className="p-4 text-center space-y-2">
-           <p className="text-sm font-bold">KasirGratisan</p>
-           <p className="text-xs text-muted-foreground">POS Gratis untuk UMKM Indonesia 🇮🇩</p>
-           <p className="text-[10px] text-muted-foreground">v1.0 • Data tersimpan di perangkat</p>
+           <p className="text-sm font-bold">Bara Kasir</p>
+           <p className="text-xs text-muted-foreground">Solusi Kasir Profesional untuk Bisnis Anda 🚀</p>
+           <p className="text-[10px] text-muted-foreground">v1.0 • Data tersimpan aman secara lokal & Cloud Sync</p>
 
            {/* Links */}
            <div className="flex flex-col gap-2 pt-2">
              <a
-               href="https://kasirgratisan.fider.io"
+               href="https://github.com/Erliandikasyahputraa/bara-kasir"
                target="_blank"
                rel="noopener noreferrer"
                className="flex items-center justify-center gap-2 w-full h-9 rounded-lg border border-border bg-muted/50 text-xs font-semibold text-foreground hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors"
              >
-               💡 Request Fitur
-             </a>
-             <a
-               href="https://traktir.jipraks.com"
-               target="_blank"
-               rel="noopener noreferrer"
-               className="flex items-center justify-center gap-2 w-full h-9 rounded-lg border border-warning/30 bg-warning/5 text-xs font-semibold text-warning hover:bg-warning/10 transition-colors"
-             >
-               ☕ Traktir Kopi untuk Developer
+               🌐 Repository
              </a>
            </div>
            {storageUsage && (

@@ -142,7 +142,7 @@ class PosDatabase extends Dexie {
   storeSettings!: Table<StoreSettings>;
 
   constructor() {
-    super('kasirgratisan-db');
+    super('bara-kasir-db');
 
     // Version 1 — original schema (must remain for migration path)
     this.version(1).stores({
