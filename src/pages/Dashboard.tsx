@@ -71,14 +71,6 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold tracking-tight">{storeSettings?.storeName || 'KasirGratisan'}</h1>
       </div>
 
-      {/* Backup Reminder */}
-      {showBackup && (
-        <BackupReminder
-          lastBackupAt={storeSettings?.lastBackupAt ?? null}
-          onDismiss={() => setBackupDismissed(true)}
-          onBackup={exportBackupData}
-        />
-      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

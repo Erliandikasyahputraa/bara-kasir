@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type PaymentMethod, type Category } from '@/lib/db';
 import { useState, useEffect, useRef } from 'react';
-import { Settings, Store, CreditCard, Tag, Download, Upload, Plus, Trash2, Edit2, Info, Truck, ArrowDownToLine, ArrowUpFromLine, ChevronRight, Receipt, Palette, HardDrive, Package, Camera, X } from 'lucide-react';
+import { Settings, Store, CreditCard, Tag, Download, Upload, Plus, Trash2, Edit2, Info, Truck, ArrowDownToLine, ArrowUpFromLine, ChevronRight, Receipt, Palette, HardDrive, Package, Camera, X, LogOut } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import ThemeColorPicker from '@/components/ThemeColorPicker';
 import { setThemeColor } from '@/hooks/use-theme-color';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -374,7 +375,7 @@ export default function Pengaturan() {
       </Card>
 
       {/* About */}
-      <Card className="border-0 shadow-sm">
+      <Card className="border-0 shadow-sm overflow-hidden">
         <CardContent className="p-4 text-center space-y-2">
            <p className="text-sm font-bold">Bara Kasir</p>
            <p className="text-xs text-muted-foreground">Solusi Kasir Profesional untuk Bisnis Anda 🚀</p>
@@ -390,6 +391,19 @@ export default function Pengaturan() {
              >
                🌐 Repository
              </a>
+             <Button 
+               variant="destructive" 
+               size="sm" 
+               className="w-full h-9 gap-2"
+               onClick={async () => {
+                 const { error } = await supabase.auth.signOut();
+                 if (error) toast.error('Gagal keluar');
+                 else toast.success('Berhasil keluar');
+               }}
+             >
+               <LogOut className="w-4 h-4" />
+               Keluar dari Akun
+             </Button>
            </div>
            {storageUsage && (
              <div className="pt-2 border-t">
