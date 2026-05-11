@@ -12,6 +12,8 @@ export async function syncToCloud() {
   if (!isOnline) return;
 
   try {
+    let syncedCount = 0;
+
     // 1. Sync Categories
     const unsyncedCategories = await db.categories.where('isSynced').equals(0).toArray();
     for (const cat of unsyncedCategories) {
@@ -23,7 +25,12 @@ export async function syncToCloud() {
         is_deleted: cat.isDeleted,
         created_at: cat.createdAt
       });
-      if (!error) await db.categories.update(cat.id!, { isSynced: 1 });
+      if (!error) {
+        await db.categories.update(cat.id!, { isSynced: 1 });
+        syncedCount++;
+      } else {
+        console.error('Error sync category:', error);
+      }
     }
 
     // 2. Sync Products
@@ -44,7 +51,10 @@ export async function syncToCloud() {
         created_at: prod.createdAt,
         updated_at: prod.updatedAt
       });
-      if (!error) await db.products.update(prod.id!, { isSynced: 1 });
+      if (!error) {
+        await db.products.update(prod.id!, { isSynced: 1 });
+        syncedCount++;
+      }
     }
 
     // 3. Sync Transactions
@@ -68,7 +78,6 @@ export async function syncToCloud() {
       });
       
       if (!error) {
-        // Sync Items for this transaction
         const items = await db.transactionItems.where('transactionId').equals(tx.id!).toArray();
         for (const item of items) {
           await supabase.from('transaction_items').upsert({
@@ -84,10 +93,13 @@ export async function syncToCloud() {
           });
         }
         await db.transactions.update(tx.id!, { isSynced: 1 });
+        syncedCount++;
       }
     }
 
-    console.log('Sync to cloud completed successfully');
+    if (syncedCount > 0) {
+      toast.success(`${syncedCount} data berhasil dicadangkan ke Cloud`);
+    }
   } catch (err) {
     console.error('Sync failed:', err);
   }
