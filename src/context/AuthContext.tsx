@@ -22,12 +22,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (uid: string) => {
-    const { data } = await supabase
+    // 1. Coba ambil data profil
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', uid)
-      .single();
-    setProfile(data);
+      .maybeSingle();
+
+    if (!data && !error) {
+      // 2. Jika data TIDAK ADA, buatkan profil baru otomatis
+      // Akun pertama akan selalu jadi 'owner' sebagai pengaman
+      const { data: allProfiles } = await supabase.from('profiles').select('id').limit(1);
+      const isFirstUser = !allProfiles || allProfiles.length === 0;
+      
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .insert([
+          { id: uid, role: isFirstUser ? 'owner' : 'staff', full_name: 'User Baru' }
+        ])
+        .select()
+        .single();
+      
+      setProfile(newProfile);
+    } else {
+      setProfile(data);
+    }
   };
 
   useEffect(() => {
