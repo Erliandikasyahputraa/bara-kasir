@@ -40,4 +40,14 @@ Log ini mencatat setiap langkah besar dalam pembangunan aplikasi Bara Kasir.
 - **Header Baru:** Menambahkan Header statis yang menampilkan Nama Toko.
 - **Visual Sync Indicator:** Menambahkan ikon awan di pojok kanan atas untuk memberi tahu User status sinkronisasi (Pending vs Tercadangkan).
 - **Notifikasi Cloud:** Integrasi Toast Notification untuk memberi tahu jumlah data yang berhasil diamankan ke awan.
+---
+
+## 📅 12 Mei 2026 (Security & Multi-User Roles)
+- **Sistem Role:** Implementasi jabatan User (Owner vs Kasir).
+- **Proteksi Menu:** Menyembunyikan menu Laporan dan Pengaturan jika user bukan Owner.
+- **UI Cleanup:**
+    - Menghapus pengingat Backup JSON (karena sudah ada Cloud Sync).
+    - Menghapus footer teks di halaman Login untuk estetika premium.
+- **Auth Context:** Membangun sistem pengenal user global menggunakan React Context.
+
 *Log akan terus diperbarui seiring berjalannya project...*

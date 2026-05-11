@@ -3,14 +3,15 @@ import { db, type TransactionItemRecord } from '@/lib/db';
 import { useState } from 'react';
 import { ShoppingCart, Package, BarChart3, TrendingUp, AlertTriangle, Receipt, ChevronRight, ClipboardList } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import BackupReminder, { shouldShowBackupReminder, exportBackupData } from '@/components/BackupReminder';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Dashboard() {
-  const [backupDismissed, setBackupDismissed] = useState(false);
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
 
@@ -55,12 +56,12 @@ export default function Dashboard() {
   const totalProfit = todayTransactions?.reduce((sum, t) => sum + t.profit, 0) ?? 0;
   const txCount = todayTransactions?.length ?? 0;
 
-  const showBackup = !backupDismissed && storeSettings && shouldShowBackupReminder(storeSettings.lastBackupAt);
-
   const quickActions = [
     { to: '/cashier', icon: ShoppingCart, label: 'Kasir', color: 'bg-primary/10 text-primary' },
     { to: '/products', icon: Package, label: 'Produk', color: 'bg-accent/10 text-accent' },
-    { to: '/reports', icon: BarChart3, label: 'Laporan', color: 'bg-success/10 text-success' },
+    ...(isAdmin ? [
+      { to: '/reports', icon: BarChart3, label: 'Laporan', color: 'bg-success/10 text-success' },
+    ] : []),
   ];
 
   return (
@@ -68,9 +69,8 @@ export default function Dashboard() {
       {/* Header */}
       <div>
         <p className="text-sm text-muted-foreground">{format(new Date(), 'EEEE, d MMMM yyyy', { locale: id })}</p>
-        <h1 className="text-2xl font-bold tracking-tight">{storeSettings?.storeName || 'KasirGratisan'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{storeSettings?.storeName || 'Bara Kasir'}</h1>
       </div>
-
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -81,15 +81,17 @@ export default function Dashboard() {
             <p className="text-xs opacity-70 mt-1">{txCount} transaksi</p>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-1.5 text-success">
-              <TrendingUp className="w-4 h-4" />
-              <p className="text-xs font-medium">Profit Hari Ini</p>
-            </div>
-            <p className="text-xl font-bold mt-1">Rp {totalProfit.toLocaleString('id-ID')}</p>
-          </CardContent>
-        </Card>
+        {isAdmin && (
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-1.5 text-success">
+                <TrendingUp className="w-4 h-4" />
+                <p className="text-xs font-medium">Profit Hari Ini</p>
+              </div>
+              <p className="text-xl font-bold mt-1">Rp {totalProfit.toLocaleString('id-ID')}</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Open Bills */}
