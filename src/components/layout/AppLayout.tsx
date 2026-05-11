@@ -5,9 +5,11 @@ import { useEffect } from 'react';
 import BottomNav from './BottomNav';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import Onboarding from '@/components/Onboarding';
-import { Cloud, RefreshCw } from 'lucide-react';
+import { Cloud, RefreshCw, LogOut } from 'lucide-react';
 import { syncToCloud } from '@/lib/sync';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export default function AppLayout() {
   const { isAdmin, profile } = useAuth();
@@ -28,12 +30,10 @@ export default function AppLayout() {
 
   if (storeSettings === undefined) return null;
 
-  // Jika data toko belum ada DAN yang login adalah Owner, tunjukkan Onboarding
   if (!storeSettings?.onboardingDone && isAdmin) {
     return <Onboarding onComplete={() => {}} />;
   }
   
-  // Jika data toko belum ada tapi yang login adalah Staff, kita tunggu sinkronisasi data dari Owner
   if (!storeSettings?.onboardingDone && !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
@@ -48,7 +48,6 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background max-w-lg md:max-w-6xl mx-auto relative">
-      {/* Header Statis */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
@@ -57,23 +56,29 @@ export default function AppLayout() {
           <span className="font-bold text-sm truncate max-w-[150px]">{storeSettings.storeName}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button 
             onClick={() => syncToCloud()}
             className="flex items-center gap-1.5 px-2 py-1 rounded-full transition-colors hover:bg-muted"
             title={unsyncedCount === 0 ? "Data sinkron" : `${unsyncedCount} data menunggu sinkronisasi`}
           >
             {unsyncedCount === 0 ? (
-              <>
-                <Cloud className="w-4 h-4 text-success" />
-                <span className="text-[10px] font-medium text-success hidden sm:inline">Tercadangkan</span>
-              </>
+              <Cloud className="w-4 h-4 text-success" />
             ) : (
-              <>
-                <RefreshCw className="w-4 h-4 text-warning animate-spin-slow" />
-                <span className="text-[10px] font-medium text-warning hidden sm:inline">{unsyncedCount} Pending</span>
-              </>
+              <RefreshCw className="w-4 h-4 text-warning animate-spin-slow" />
             )}
+          </button>
+          
+          <button 
+            onClick={async () => {
+              const { error } = await supabase.auth.signOut();
+              if (error) toast.error('Gagal keluar');
+              else toast.success('Berhasil keluar');
+            }}
+            className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+            title="Keluar"
+          >
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </header>
