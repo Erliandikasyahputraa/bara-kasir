@@ -29,8 +29,10 @@ export async function syncToCloud() {
         storeName: cloudSettings.store_name,
         address: cloudSettings.address,
         phone: cloudSettings.phone,
+        receiptFooter: 'Terima kasih atas kunjungan Anda!',
         onboardingDone: cloudSettings.onboarding_done,
-        isSynced: 1
+        lastBackupAt: null,
+        deviceId: crypto.randomUUID()
       });
     }
 
@@ -46,6 +48,7 @@ export async function syncToCloud() {
             color: cat.color,
             icon: cat.icon,
             isDeleted: cat.is_deleted,
+            deletedAt: null,
             createdAt: new Date(cat.created_at),
             isSynced: 1
           });
@@ -87,6 +90,7 @@ export async function syncToCloud() {
             barcode: p.barcode,
             photo: p.photo,
             isDeleted: p.is_deleted,
+            deletedAt: null,
             createdAt: new Date(p.created_at),
             updatedAt: new Date(p.updated_at),
             isSynced: 1

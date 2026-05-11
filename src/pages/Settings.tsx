@@ -80,6 +80,9 @@ export default function Settings() {
         phone: storePhone,
         logo: storeLogo,
         onboardingDone: true,
+        receiptFooter: 'Terima kasih atas kunjungan Anda!',
+        lastBackupAt: null,
+        deviceId: crypto.randomUUID()
       });
     }
     setStoreDialog(false);
@@ -114,7 +117,12 @@ export default function Settings() {
     if (pmEditId) {
       await db.paymentMethods.update(pmEditId, { name: pmName, category: pmCategory as any });
     } else {
-      await db.paymentMethods.add({ name: pmName, category: pmCategory as any });
+      await db.paymentMethods.add({ 
+        name: pmName, 
+        category: pmCategory as any,
+        isDefault: false,
+        createdAt: new Date()
+      });
     }
     setPmDialog(false);
     toast.success('Metode pembayaran disimpan');
@@ -144,7 +152,15 @@ export default function Settings() {
     if (catEditId) {
       await db.categories.update(catEditId, { name: catName, icon: catIcon, color: catColor, isSynced: 0 });
     } else {
-      await db.categories.add({ name: catName, icon: catIcon, color: catColor, isDeleted: 0, createdAt: new Date(), isSynced: 0 });
+      await db.categories.add({ 
+        name: catName, 
+        icon: catIcon, 
+        color: catColor, 
+        isDeleted: 0, 
+        deletedAt: null,
+        createdAt: new Date(), 
+        isSynced: 0 
+      });
     }
     setCatDialog(false);
     toast.success('Kategori disimpan');
