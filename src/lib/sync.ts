@@ -34,7 +34,25 @@ export async function syncToCloud() {
       });
     }
 
-    // 1. Sync Categories
+    // 1. Sync Categories (Two-way)
+    const { data: cloudCats } = await supabase.from('categories').select('*');
+    if (cloudCats) {
+      for (const cat of cloudCats) {
+        const localCat = await db.categories.get(cat.id);
+        if (!localCat) {
+          await db.categories.add({
+            id: cat.id,
+            name: cat.name,
+            color: cat.color,
+            icon: cat.icon,
+            isDeleted: cat.is_deleted,
+            createdAt: new Date(cat.created_at),
+            isSynced: 1
+          });
+        }
+      }
+    }
+
     const unsyncedCategories = await db.categories.where('isSynced').equals(0).toArray();
     for (const cat of unsyncedCategories) {
       const { error } = await supabase.from('categories').upsert({
@@ -51,7 +69,32 @@ export async function syncToCloud() {
       }
     }
 
-    // 2. Sync Products
+    // 2. Sync Products (Two-way)
+    const { data: cloudProds } = await supabase.from('products').select('*');
+    if (cloudProds) {
+      for (const p of cloudProds) {
+        const localProd = await db.products.get(p.id);
+        if (!localProd) {
+          await db.products.add({
+            id: p.id,
+            name: p.name,
+            sku: p.sku,
+            categoryId: p.category_id,
+            price: Number(p.price),
+            hpp: Number(p.hpp),
+            stock: p.stock,
+            unit: p.unit,
+            barcode: p.barcode,
+            photo: p.photo,
+            isDeleted: p.is_deleted,
+            createdAt: new Date(p.created_at),
+            updatedAt: new Date(p.updated_at),
+            isSynced: 1
+          });
+        }
+      }
+    }
+
     const unsyncedProducts = await db.products.where('isSynced').equals(0).toArray();
     for (const prod of unsyncedProducts) {
       const { error } = await supabase.from('products').upsert({
