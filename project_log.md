@@ -22,4 +22,16 @@ Log ini mencatat setiap langkah besar dalam pembangunan aplikasi Bara Kasir.
 - **Keamanan:** Penjelasan mengenai RLS (Row Level Security) dan Service Role Key.
 
 ---
+
+## 📅 12 Mei 2026 (Sync Engine & Database V5)
+- **Database Upgrade:** Menaikkan versi database lokal (Dexie) ke Versi 5.
+- **Kolom Sinkronisasi:** Menambahkan kolom `isSynced` di tabel Categories, Products, Suppliers, dan Transactions.
+- **Sync Engine:** 
+    - Membuat `src/lib/sync.ts` sebagai pengelola pengiriman data otomatis.
+    - Implementasi logika "Background Sync" setiap 30 detik.
+    - Integrasi otomatis saat perangkat kembali Online.
+- **Data Integrity:** Menyesuaikan field transaksi agar cocok dengan struktur tabel di Supabase.
+- **Auto-Sensor:** Implementasi Dexie Hooks agar setiap perubahan data lokal otomatis memicu antrean sinkronisasi ke Cloud secara cerdas.
+
+---
 *Log akan terus diperbarui seiring berjalannya project...*

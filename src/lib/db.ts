@@ -8,8 +8,9 @@ export interface Category {
   color: string;
   icon: string;
   createdAt: Date;
-  isDeleted: number; // 0 = active, 1 = deleted (IndexedDB can't index booleans)
+  isDeleted: number; // 0 = active, 1 = deleted
   deletedAt: Date | null;
+  isSynced: number; // 0 = no, 1 = yes
 }
 
 export interface Product {
@@ -27,6 +28,7 @@ export interface Product {
   updatedAt: Date;
   isDeleted: number; // 0 = active, 1 = deleted
   deletedAt: Date | null;
+  isSynced: number;
 }
 
 export interface Supplier {
@@ -38,6 +40,7 @@ export interface Supplier {
   createdAt: Date;
   isDeleted: number; // 0 = active, 1 = deleted
   deletedAt: Date | null;
+  isSynced: number;
 }
 
 export interface StockIn {
@@ -91,6 +94,7 @@ export interface Transaction {
   date: Date;
   receiptNumber: string;
   status: 'open' | 'completed';
+  isSynced: number;
   orderNumber?: string;
   customerName?: string;
   tableNumber?: string;
@@ -279,10 +283,43 @@ class PosDatabase extends Dexie {
         }
       }
     });
+
+    // Version 5 — Sync Support
+    this.version(5).stores({
+      categories:       '++id, name, isDeleted, isSynced',
+      products:         '++id, name, &sku, categoryId, barcode, isDeleted, isSynced',
+      suppliers:        '++id, name, isDeleted, isSynced',
+      transactions:     '++id, date, &receiptNumber, paymentMethodId, status, orderNumber, isSynced',
+      transactionItems: '++id, transactionId, productId',
+      stockIns:         '++id, productId, supplierId, date',
+      stockOuts:        '++id, productId, date',
+      hppHistory:       '++id, productId, date',
+      paymentMethods:   '++id, name, category',
+      storeSettings:    '++id',
+    }).upgrade(async (tx) => {
+      await tx.table('categories').toCollection().modify(c => { c.isSynced = 0; });
+      await tx.table('products').toCollection().modify(p => { p.isSynced = 0; });
+      await tx.table('suppliers').toCollection().modify(s => { s.isSynced = 0; });
+      await tx.table('transactions').toCollection().modify(t => { t.isSynced = 0; });
+    });
   }
 }
 
 export const db = new PosDatabase();
+
+// === SENSOR OTOMATIS (Sync Hooks) ===
+// Setiap kali ada data ditambah/diubah, set isSynced ke 0 agar dikirim ke Cloud
+db.categories.hook('creating', (id, obj) => { obj.isSynced = 0; });
+db.categories.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
+
+db.products.hook('creating', (id, obj) => { obj.isSynced = 0; });
+db.products.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
+
+db.suppliers.hook('creating', (id, obj) => { obj.isSynced = 0; });
+db.suppliers.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
+
+db.transactions.hook('creating', (id, obj) => { obj.isSynced = 0; });
+db.transactions.hook('updating', (mods) => ({ ...mods, isSynced: 0 }));
 
 // Seed default data
 export async function seedDefaultData() {

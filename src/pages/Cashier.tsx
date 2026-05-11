@@ -212,6 +212,7 @@ export default function Kasir() {
         tableNumber: tableNumber.trim() || undefined,
         remarks: remarks.trim() || undefined,
         openedAt: now,
+        isSynced: 0,
       };
 
       const txId = await db.transactions.add(txData);
@@ -388,6 +389,7 @@ export default function Kasir() {
         customerName: customerName.trim() || undefined,
         tableNumber: tableNumber.trim() || undefined,
         remarks: remarks.trim() || undefined,
+        isSynced: 0,
       };
 
       const txId = await db.transactions.add(txData);
