@@ -45,9 +45,10 @@ Log ini mencatat setiap langkah besar dalam pembangunan aplikasi Bara Kasir.
 ## 📅 12 Mei 2026 (Security & Multi-User Roles)
 - **Sistem Role:** Implementasi jabatan User (Owner vs Kasir).
 - **Proteksi Menu:** Menyembunyikan menu Laporan dan Pengaturan jika user bukan Owner.
-- **UI Cleanup:**
-    - Menghapus pengingat Backup JSON (karena sudah ada Cloud Sync).
-    - Menghapus footer teks di halaman Login untuk estetika premium.
 - **Auth Context:** Membangun sistem pengenal user global menggunakan React Context.
+- **Auto-Profile Creation:** Aplikasi otomatis mendaftarkan profil baru jika user login pertama kali.
+- **SQL Optimization:** Menggunakan ENUM (Dropdown) untuk Role di Supabase agar lebih praktis.
+- **Navigasi Simetris:** Memindahkan tombol Kasir ke posisi tengah di Bottom Nav.
+- **Header Logout:** Menambahkan tombol Logout di Header untuk akses cepat di semua perangkat.
 
 *Log akan terus diperbarui seiring berjalannya project...*

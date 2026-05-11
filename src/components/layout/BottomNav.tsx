@@ -8,8 +8,8 @@ export default function BottomNav() {
 
   const navItems = [
     { to: '/', icon: Home, label: 'Beranda' },
-    { to: '/products', icon: Package, label: 'Produk' },
     { to: '/cashier', icon: ShoppingCart, label: 'Kasir', isCta: true },
+    { to: '/products', icon: Package, label: 'Produk' },
     ...(isAdmin ? [
       { to: '/reports', icon: BarChart3, label: 'Laporan' },
       { to: '/settings', icon: Settings, label: 'Lainnya' },
