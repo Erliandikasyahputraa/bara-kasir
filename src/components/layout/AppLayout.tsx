@@ -1,15 +1,17 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, seedDefaultData } from '@/lib/db';
 import { useEffect } from 'react';
 import BottomNav from './BottomNav';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import Onboarding from '@/components/Onboarding';
-import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { Cloud, RefreshCw } from 'lucide-react';
 import { syncToCloud } from '@/lib/sync';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AppLayout() {
-  useThemeColor(); // Apply saved theme color on mount
+  const { isAdmin, profile } = useAuth();
+  useThemeColor();
 
   useEffect(() => {
     seedDefaultData();
@@ -17,7 +19,6 @@ export default function AppLayout() {
 
   const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
   
-  // Hitung data yang belum sinkron
   const unsyncedCount = useLiveQuery(async () => {
     const c = await db.categories.where('isSynced').equals(0).count();
     const p = await db.products.where('isSynced').equals(0).count();
@@ -25,12 +26,24 @@ export default function AppLayout() {
     return c + p + t;
   }, []);
 
-  // Loading state
   if (storeSettings === undefined) return null;
 
-  // Show onboarding if not done yet
-  if (!storeSettings || !storeSettings.onboardingDone) {
-    return <Onboarding onComplete={() => { /* Dexie live query will auto-refresh */ }} />;
+  // Jika data toko belum ada DAN yang login adalah Owner, tunjukkan Onboarding
+  if (!storeSettings?.onboardingDone && isAdmin) {
+    return <Onboarding onComplete={() => {}} />;
+  }
+  
+  // Jika data toko belum ada tapi yang login adalah Staff, kita tunggu sinkronisasi data dari Owner
+  if (!storeSettings?.onboardingDone && !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+        <div>
+          <RefreshCw className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+          <h2 className="font-bold text-lg">Menyiapkan Data Cafe...</h2>
+          <p className="text-sm text-muted-foreground mt-2">Sedang mengambil data pengaturan dari pusat.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

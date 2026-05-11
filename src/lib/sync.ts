@@ -2,17 +2,37 @@ import { db } from './db';
 import { supabase } from './supabase';
 import { toast } from 'sonner';
 
-/**
- * Mesin Sinkronisasi Bara Kasir
- * Tugas: Mengirim data lokal yang belum ter-sync ke Supabase
- */
-
 export async function syncToCloud() {
   const isOnline = navigator.onLine;
   if (!isOnline) return;
 
   try {
     let syncedCount = 0;
+
+    // 0. Sync Store Settings
+    const settings = await db.storeSettings.toCollection().first();
+    if (settings) {
+      await supabase.from('store_settings').upsert({
+        id: 1,
+        store_name: settings.storeName,
+        address: settings.address,
+        phone: settings.phone,
+        footer_text: settings.footerText,
+        onboarding_done: settings.onboardingDone,
+        updated_at: new Date()
+      });
+    } else {
+      const { data: cloudSettings } = await supabase.from('store_settings').select('*').eq('id', 1).maybeSingle();
+      if (cloudSettings) {
+        await db.storeSettings.add({
+          storeName: cloudSettings.store_name,
+          address: cloudSettings.address,
+          phone: cloudSettings.phone,
+          footerText: cloudSettings.footer_text,
+          onboardingDone: cloudSettings.onboarding_done,
+        });
+      }
+    }
 
     // 1. Sync Categories
     const unsyncedCategories = await db.categories.where('isSynced').equals(0).toArray();
@@ -28,8 +48,6 @@ export async function syncToCloud() {
       if (!error) {
         await db.categories.update(cat.id!, { isSynced: 1 });
         syncedCount++;
-      } else {
-        console.error('Error sync category:', error);
       }
     }
 
@@ -105,10 +123,7 @@ export async function syncToCloud() {
   }
 }
 
-// Jalankan sync setiap 30 detik jika online
 if (typeof window !== 'undefined') {
   setInterval(syncToCloud, 30000);
-  
-  // Juga jalankan saat kembali online
   window.addEventListener('online', syncToCloud);
 }
