@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
         orientation: "any",
         icons: [
           {
-            src: "/og-image.png",
+            src: "/logo-bara.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any"

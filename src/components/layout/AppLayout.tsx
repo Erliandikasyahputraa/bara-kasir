@@ -76,9 +76,7 @@ export default function AppLayout() {
     <div className="min-h-screen bg-background max-w-lg md:max-w-6xl mx-auto relative">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-            B
-          </div>
+          <img src="/logo-bara.png" alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white p-0.5" />
           <span className="font-bold text-sm truncate max-w-[150px]">{storeSettings.storeName}</span>
         </div>
 
