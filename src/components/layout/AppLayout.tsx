@@ -1,7 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, seedDefaultData } from '@/lib/db';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import BottomNav from './BottomNav';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import Onboarding from '@/components/Onboarding';
@@ -28,7 +28,32 @@ export default function AppLayout() {
     return c + p + t;
   }, []);
 
-  if (storeSettings === undefined) return null;
+  const { session } = useAuth();
+  const [isInitialSync, setIsInitialSync] = useState(true);
+
+  useEffect(() => {
+    if (session) {
+      syncToCloud().finally(() => {
+        setTimeout(() => setIsInitialSync(false), 1500);
+      });
+    } else {
+      setIsInitialSync(false);
+    }
+  }, [session]);
+
+  if (storeSettings === undefined || isInitialSync) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center space-y-6">
+        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+          <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold">Menyiapkan Data Cafe...</h2>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">Sedang sinkronisasi data dari pusat.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!storeSettings?.onboardingDone && isAdmin) {
     return <Onboarding onComplete={() => {}} />;
@@ -39,8 +64,8 @@ export default function AppLayout() {
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div>
           <RefreshCw className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-          <h2 className="font-bold text-lg">Menyiapkan Data Cafe...</h2>
-          <p className="text-sm text-muted-foreground mt-2">Sedang mengambil data pengaturan dari pusat.</p>
+          <h2 className="font-bold text-lg">Menunggu Owner...</h2>
+          <p className="text-sm text-muted-foreground mt-2">Data toko belum diatur oleh Owner.</p>
         </div>
       </div>
     );

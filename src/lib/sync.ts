@@ -11,27 +11,27 @@ export async function syncToCloud() {
 
     // 0. Sync Store Settings
     const settings = await db.storeSettings.toCollection().first();
+    const { data: cloudSettings } = await supabase.from('store_settings').select('*').limit(1).maybeSingle();
+
     if (settings) {
+      // Push local to cloud
       await supabase.from('store_settings').upsert({
-        id: 1,
+        id: 1, // Kita asumsikan satu store per tenant untuk sekarang
         store_name: settings.storeName,
         address: settings.address,
         phone: settings.phone,
-        footer_text: settings.footerText,
         onboarding_done: settings.onboardingDone,
         updated_at: new Date()
       });
-    } else {
-      const { data: cloudSettings } = await supabase.from('store_settings').select('*').eq('id', 1).maybeSingle();
-      if (cloudSettings) {
-        await db.storeSettings.add({
-          storeName: cloudSettings.store_name,
-          address: cloudSettings.address,
-          phone: cloudSettings.phone,
-          footerText: cloudSettings.footer_text,
-          onboardingDone: cloudSettings.onboarding_done,
-        });
-      }
+    } else if (cloudSettings) {
+      // Pull cloud to local
+      await db.storeSettings.add({
+        storeName: cloudSettings.store_name,
+        address: cloudSettings.address,
+        phone: cloudSettings.phone,
+        onboardingDone: cloudSettings.onboarding_done,
+        isSynced: 1
+      });
     }
 
     // 1. Sync Categories
