@@ -613,8 +613,8 @@ export default function Kasir() {
             <p className="text-sm text-muted-foreground">Keranjang kosong</p>
           </div>
         ) : (
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto space-y-3 p-4">
+          <div className="flex flex-col flex-1 overflow-hidden landscape:overflow-y-auto">
+            <div className="flex-1 overflow-y-auto landscape:overflow-y-visible landscape:h-auto space-y-3 p-4">
               {cart.map(item => (
                 <div key={item.product.id} className="bg-muted/50 p-3 rounded-xl space-y-1.5">
                   <div className="flex items-center gap-3">

@@ -32,7 +32,7 @@ export default function BottomNav() {
               cn(
                 'flex flex-col items-center gap-0.5 transition-colors min-w-[52px]',
                 isCta
-                  ? 'relative -top-4 landscape:-top-1.5'
+                  ? 'relative -top-5 landscape:-top-2'
                   : cn(
                       'px-2 py-1.5 landscape:py-0.5 rounded-xl',
                       isActive
@@ -46,11 +46,11 @@ export default function BottomNav() {
               isCta ? (
                 <>
                   <div className={cn(
-                    'w-14 h-14 landscape:w-9 landscape:h-9 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95',
+                    'w-16 h-16 landscape:w-11 landscape:h-11 rounded-full flex items-center justify-center shadow-2xl transition-transform active:scale-95 border-4 border-card',
                     'bg-primary text-primary-foreground',
                     isActive && 'ring-4 ring-primary/20'
                   )}>
-                    <Icon className="w-6 h-6 landscape:w-4 landscape:h-4" strokeWidth={2.5} />
+                    <Icon className="w-7 h-7 landscape:w-5 landscape:h-5" strokeWidth={2.5} />
                   </div>
                   <span className={cn(
                     'text-[10px] font-bold leading-tight mt-0.5 landscape:hidden',

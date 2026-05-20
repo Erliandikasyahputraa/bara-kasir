@@ -22,7 +22,13 @@ export default function BarcodeScanner({ open, onClose, onScan }: BarcodeScanner
     if (!open) return;
 
     const startScanner = async () => {
+      // Wait a short duration to ensure the Dialog Portal and div are mounted in the DOM
+      await new Promise(resolve => setTimeout(resolve, 200));
+      if (!open) return;
+
       try {
+        const devices = await Html5Qrcode.getCameras().catch(() => []);
+        
         const scanner = new Html5Qrcode(scannerId, {
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
@@ -41,8 +47,17 @@ export default function BarcodeScanner({ open, onClose, onScan }: BarcodeScanner
         scannerRef.current = scanner;
         setScanning(true);
 
+        let cameraConfig: any = { facingMode: 'environment' };
+        if (devices && devices.length > 0) {
+          const backCam = devices.find(d => {
+            const label = d.label.toLowerCase();
+            return label.includes('back') || label.includes('rear') || label.includes('belakang') || label.includes('environment');
+          });
+          cameraConfig = backCam ? backCam.id : devices[0].id;
+        }
+
         await scanner.start(
-          { facingMode: 'environment' },
+          cameraConfig,
           {
             fps: 10,
             qrbox: { width: 250, height: 150 },
@@ -67,7 +82,7 @@ export default function BarcodeScanner({ open, onClose, onScan }: BarcodeScanner
         } else if (errorMessage.includes('NotFoundError')) {
           toast.error('Kamera tidak ditemukan.');
         } else {
-          toast.error('Gagal memulai kamera.');
+          toast.error('Gagal memulai kamera. Coba refresh halaman.');
         }
         onClose();
       }
