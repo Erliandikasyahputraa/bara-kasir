@@ -247,7 +247,7 @@ export async function syncToCloud() {
               deletedAt: null
             });
 
-            // Add corresponding transaction items
+            // Add corresponding transaction items and adjust local product stock
             if (cloudItems) {
               const matchedItems = cloudItems.filter(item => item.transaction_id === tx.id);
               for (const item of matchedItems) {
@@ -264,6 +264,19 @@ export async function syncToCloud() {
                     subtotal: item.subtotal,
                     notes: item.notes || undefined
                   });
+
+                  // Adjust local product stock if transaction date is newer than the product's last update
+                  const product = await db.products.get(item.product_id);
+                  if (product) {
+                    const prodTime = product.updatedAt ? new Date(product.updatedAt).getTime() : 0;
+                    const txTime = new Date(tx.date).getTime();
+                    if (txTime > prodTime) {
+                      await db.products.update(item.product_id, {
+                        stock: Math.max(0, product.stock - item.quantity),
+                        updatedAt: new Date(tx.date)
+                      });
+                    }
+                  }
                 }
               }
             }
@@ -274,6 +287,17 @@ export async function syncToCloud() {
         const localSyncedTxs = await db.transactions.where('isSynced').equals(1).toArray();
         for (const localTx of localSyncedTxs) {
           if (!cloudTxIds.has(localTx.id!)) {
+            // Restore local product stock before deletion
+            const items = await db.transactionItems.where('transactionId').equals(localTx.id!).toArray();
+            for (const item of items) {
+              const product = await db.products.get(item.productId);
+              if (product) {
+                await db.products.update(item.productId, {
+                  stock: product.stock + item.quantity,
+                  updatedAt: new Date()
+                });
+              }
+            }
             await db.transactionItems.where('transactionId').equals(localTx.id!).delete();
             await db.transactions.delete(localTx.id!);
           }
@@ -513,6 +537,19 @@ export async function syncToCloud() {
               notes: si.notes,
               isSynced: 1
             });
+
+            // Adjust local product stock
+            const product = await db.products.get(si.product_id);
+            if (product) {
+              const prodTime = product.updatedAt ? new Date(product.updatedAt).getTime() : 0;
+              const siTime = new Date(si.date).getTime();
+              if (siTime > prodTime) {
+                await db.products.update(si.product_id, {
+                  stock: product.stock + si.quantity,
+                  updatedAt: new Date(si.date)
+                });
+              }
+            }
           }
         }
       }
@@ -552,6 +589,19 @@ export async function syncToCloud() {
               notes: so.notes,
               isSynced: 1
             });
+
+            // Adjust local product stock
+            const product = await db.products.get(so.product_id);
+            if (product) {
+              const prodTime = product.updatedAt ? new Date(product.updatedAt).getTime() : 0;
+              const soTime = new Date(so.date).getTime();
+              if (soTime > prodTime) {
+                await db.products.update(so.product_id, {
+                  stock: Math.max(0, product.stock - so.quantity),
+                  updatedAt: new Date(so.date)
+                });
+              }
+            }
           }
         }
       }

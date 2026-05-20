@@ -104,9 +104,47 @@ export default function Produk() {
     };
 
     if (editProduct?.id) {
+      const oldStock = editProduct.stock || 0;
+      const newStock = Number(stock) || 0;
+      const diff = newStock - oldStock;
+
       await db.products.update(editProduct.id, data);
+
+      if (diff > 0) {
+        await db.stockIns.add({
+          productId: editProduct.id,
+          quantity: diff,
+          buyPrice: Number(hpp) || 0,
+          totalPrice: (Number(hpp) || 0) * diff,
+          date: new Date(),
+          notes: 'Koreksi Stok (Manual)',
+          isSynced: 0
+        });
+      } else if (diff < 0) {
+        await db.stockOuts.add({
+          productId: editProduct.id,
+          quantity: Math.abs(diff),
+          reason: 'Koreksi Stok (Manual)',
+          date: new Date(),
+          notes: 'Koreksi Stok (Manual)',
+          isSynced: 0
+        });
+      }
     } else {
-      await db.products.add({ ...data, createdAt: new Date(), isDeleted: 0, deletedAt: null } as Product);
+      const initialStock = Number(stock) || 0;
+      const newProdId = await db.products.add({ ...data, createdAt: new Date(), isDeleted: 0, deletedAt: null, isSynced: 0 } as Product);
+
+      if (initialStock > 0) {
+        await db.stockIns.add({
+          productId: newProdId as number,
+          quantity: initialStock,
+          buyPrice: Number(hpp) || 0,
+          totalPrice: (Number(hpp) || 0) * initialStock,
+          date: new Date(),
+          notes: 'Inisialisasi Stok Produk',
+          isSynced: 0
+        });
+      }
     }
     setDialogOpen(false);
   };
