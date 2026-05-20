@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Product, type Category, type Transaction, type TransactionItemRecord } from '@/lib/db';
 import { useState, useRef, useEffect } from 'react';
-import { Search, Plus, Minus, ShoppingCart, X, Percent, Tag, CreditCard, Banknote, Check, ScanBarcode, Package as PackageIcon, ClipboardList, Save, Pencil, User, Hash, Trash2, Barcode } from 'lucide-react';
+import { Search, Plus, Minus, ShoppingCart, X, Percent, Tag, CreditCard, Banknote, Check, ScanBarcode, Package as PackageIcon, ClipboardList, Save, Pencil, User, Hash, Trash2, Barcode, RefreshCw } from 'lucide-react';
 import Receipt from '@/components/Receipt';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { syncToCloud } from '@/lib/sync';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 
@@ -28,6 +29,7 @@ interface CartItem {
 export default function Kasir() {
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [editingTxId, setEditingTxId] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -133,114 +135,126 @@ export default function Kasir() {
   // === Open Bill Operations ===
 
   const saveOpenBill = async () => {
+    if (isSubmitting) return;
     if (cart.length === 0) { toast.error('Keranjang kosong'); return; }
 
-    const now = new Date();
+    setIsSubmitting(true);
+    try {
+      const now = new Date();
 
-    if (editingTxId) {
-      // Update existing open bill
-      const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
+      if (editingTxId) {
+        // Update existing open bill
+        const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
 
-      await db.transactions.update(editingTxId, {
-        subtotal,
-        discountType: txDiscountType,
-        discountValue: Number(txDiscountValue) || 0,
-        discountAmount: txDiscountAmount,
-        total,
-        customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
-        remarks: remarks.trim() || undefined,
-        date: now,
-      });
+        await db.transactions.update(editingTxId, {
+          subtotal,
+          discountType: txDiscountType,
+          discountValue: Number(txDiscountValue) || 0,
+          discountAmount: txDiscountAmount,
+          total,
+          customerName: customerName.trim() || undefined,
+          tableNumber: tableNumber.trim() || undefined,
+          remarks: remarks.trim() || undefined,
+          date: now,
+        });
 
-      await db.transactionItems.where('transactionId').equals(editingTxId).delete();
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: editingTxId,
-        productId: c.product.id!,
-        productName: c.product.name,
-        quantity: c.qty,
-        price: c.product.price,
-        hpp: c.product.hpp,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
-        subtotal: getItemSubtotal(c),
-        notes: c.notes,
-      }));
-      await db.transactionItems.bulkAdd(itemRecords);
+        await db.transactionItems.where('transactionId').equals(editingTxId).delete();
+        const itemRecords: TransactionItemRecord[] = cart.map(c => ({
+          transactionId: editingTxId,
+          productId: c.product.id!,
+          productName: c.product.name,
+          quantity: c.qty,
+          price: c.product.price,
+          hpp: c.product.hpp,
+          discountType: c.discountType,
+          discountValue: c.discountValue,
+          discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
+          subtotal: getItemSubtotal(c),
+          notes: c.notes,
+        }));
+        await db.transactionItems.bulkAdd(itemRecords);
 
-      // Adjust stock deltas
-      for (const cartItem of cart) {
-        const oldItem = oldItems.find(oi => oi.productId === cartItem.product.id);
-        const oldQty = oldItem?.quantity ?? 0;
-        const newQty = cartItem.qty;
-        const delta = newQty - oldQty;
-        if (delta !== 0) {
-          await db.products.update(cartItem.product.id!, { stock: cartItem.product.stock - delta, updatedAt: new Date() });
-        }
-      }
-      // Restore stock for removed items that were in old bill
-      for (const oldItem of oldItems) {
-        const stillInCart = cart.find(c => c.product.id === oldItem.productId);
-        if (!stillInCart) {
-          const product = await db.products.get(oldItem.productId);
-          if (product) {
-            await db.products.update(oldItem.productId, { stock: product.stock + oldItem.quantity });
+        // Adjust stock deltas
+        for (const cartItem of cart) {
+          const oldItem = oldItems.find(oi => oi.productId === cartItem.product.id);
+          const oldQty = oldItem?.quantity ?? 0;
+          const newQty = cartItem.qty;
+          const delta = newQty - oldQty;
+          if (delta !== 0) {
+            await db.products.update(cartItem.product.id!, { stock: cartItem.product.stock - delta, updatedAt: new Date() });
           }
         }
+        // Restore stock for removed items that were in old bill
+        for (const oldItem of oldItems) {
+          const stillInCart = cart.find(c => c.product.id === oldItem.productId);
+          if (!stillInCart) {
+            const product = await db.products.get(oldItem.productId);
+            if (product) {
+              await db.products.update(oldItem.productId, { stock: product.stock + oldItem.quantity });
+            }
+          }
+        }
+
+        const updatedTx = await db.transactions.get(editingTxId);
+        toast.success(`Bill ${updatedTx?.receiptNumber} diperbarui!`);
+      } else {
+        const receiptNumber = `TX${Date.now()}`;
+
+        const txData: Transaction = {
+          subtotal,
+          discountType: txDiscountType,
+          discountValue: Number(txDiscountValue) || 0,
+          discountAmount: txDiscountAmount,
+          total,
+          paymentMethodId: 0,
+          paymentAmount: 0,
+          change: 0,
+          profit: 0,
+          date: now,
+          receiptNumber,
+          status: 'open',
+          customerName: customerName.trim() || undefined,
+          tableNumber: tableNumber.trim() || undefined,
+          remarks: remarks.trim() || undefined,
+          openedAt: now,
+          isSynced: 0,
+        };
+
+        const txId = await db.transactions.add(txData);
+
+        const itemRecords: TransactionItemRecord[] = cart.map(c => ({
+          transactionId: txId as number,
+          productId: c.product.id!,
+          productName: c.product.name,
+          quantity: c.qty,
+          price: c.product.price,
+          hpp: c.product.hpp,
+          discountType: c.discountType,
+          discountValue: c.discountValue,
+          discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
+          subtotal: getItemSubtotal(c),
+          notes: c.notes,
+        }));
+        await db.transactionItems.bulkAdd(itemRecords);
+
+        for (const item of cart) {
+          await db.products.update(item.product.id!, { stock: item.product.stock - item.qty, updatedAt: new Date() });
+        }
+
+        toast.success(`Bill ${receiptNumber} disimpan!`);
       }
 
-      const updatedTx = await db.transactions.get(editingTxId);
-      toast.success(`Bill ${updatedTx?.receiptNumber} diperbarui!`);
-    } else {
-      const receiptNumber = `TX${Date.now()}`;
+      doFullReset();
+      setCartOpen(false);
 
-      const txData: Transaction = {
-        subtotal,
-        discountType: txDiscountType,
-        discountValue: Number(txDiscountValue) || 0,
-        discountAmount: txDiscountAmount,
-        total,
-        paymentMethodId: 0,
-        paymentAmount: 0,
-        change: 0,
-        profit: 0,
-        date: now,
-        receiptNumber,
-        status: 'open',
-        customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
-        remarks: remarks.trim() || undefined,
-        openedAt: now,
-        isSynced: 0,
-      };
-
-      const txId = await db.transactions.add(txData);
-
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: txId as number,
-        productId: c.product.id!,
-        productName: c.product.name,
-        quantity: c.qty,
-        price: c.product.price,
-        hpp: c.product.hpp,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
-        subtotal: getItemSubtotal(c),
-        notes: c.notes,
-      }));
-      await db.transactionItems.bulkAdd(itemRecords);
-
-      for (const item of cart) {
-        await db.products.update(item.product.id!, { stock: item.product.stock - item.qty, updatedAt: new Date() });
-      }
-
-      toast.success(`Bill ${receiptNumber} disimpan!`);
+      // Trigger sync
+      syncToCloud();
+    } catch (error) {
+      console.error(error);
+      toast.error('Gagal menyimpan open bill');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    doFullReset();
-    setCartOpen(false);
   };
 
   const loadOpenBill = async (tx: Transaction) => {
@@ -307,121 +321,133 @@ export default function Kasir() {
   // === Checkout ===
 
   const handleCheckout = async () => {
+    if (isSubmitting) return;
     if (!paymentMethodId || paidAmount < total) return;
 
-    if (editingTxId) {
-      // Update existing open bill → paid
-      const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
+    setIsSubmitting(true);
+    try {
+      if (editingTxId) {
+        // Update existing open bill → paid
+        const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
 
-      await db.transactions.update(editingTxId, {
-        status: 'completed',
-        subtotal,
-        discountType: txDiscountType,
-        discountValue: Number(txDiscountValue) || 0,
-        discountAmount: txDiscountAmount,
-        total,
-        paymentMethodId: Number(paymentMethodId),
-        paymentAmount: paidAmount,
-        change,
-        profit: totalProfit,
-        customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
-        closedAt: new Date(),
-      });
+        await db.transactions.update(editingTxId, {
+          status: 'completed',
+          subtotal,
+          discountType: txDiscountType,
+          discountValue: Number(txDiscountValue) || 0,
+          discountAmount: txDiscountAmount,
+          total,
+          paymentMethodId: Number(paymentMethodId),
+          paymentAmount: paidAmount,
+          change,
+          profit: totalProfit,
+          customerName: customerName.trim() || undefined,
+          tableNumber: tableNumber.trim() || undefined,
+          closedAt: new Date(),
+        });
 
-      await db.transactionItems.where('transactionId').equals(editingTxId).delete();
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: editingTxId,
-        productId: c.product.id!,
-        productName: c.product.name,
-        quantity: c.qty,
-        price: c.product.price,
-        hpp: c.product.hpp,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
-        subtotal: getItemSubtotal(c),
-        notes: c.notes,
-      }));
-      await db.transactionItems.bulkAdd(itemRecords);
+        await db.transactionItems.where('transactionId').equals(editingTxId).delete();
+        const itemRecords: TransactionItemRecord[] = cart.map(c => ({
+          transactionId: editingTxId,
+          productId: c.product.id!,
+          productName: c.product.name,
+          quantity: c.qty,
+          price: c.product.price,
+          hpp: c.product.hpp,
+          discountType: c.discountType,
+          discountValue: c.discountValue,
+          discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
+          subtotal: getItemSubtotal(c),
+          notes: c.notes,
+        }));
+        await db.transactionItems.bulkAdd(itemRecords);
 
-      // Adjust stock deltas (same as saveOpenBill)
-      for (const cartItem of cart) {
-        const oldItem = oldItems.find(oi => oi.productId === cartItem.product.id);
-        const oldQty = oldItem?.quantity ?? 0;
-        const newQty = cartItem.qty;
-        const delta = newQty - oldQty;
-        if (delta !== 0) {
-          await db.products.update(cartItem.product.id!, { stock: cartItem.product.stock - delta, updatedAt: new Date() });
-        }
-      }
-      for (const oldItem of oldItems) {
-        const stillInCart = cart.find(c => c.product.id === oldItem.productId);
-        if (!stillInCart) {
-          const product = await db.products.get(oldItem.productId);
-          if (product) {
-            await db.products.update(oldItem.productId, { stock: product.stock + oldItem.quantity });
+        // Adjust stock deltas (same as saveOpenBill)
+        for (const cartItem of cart) {
+          const oldItem = oldItems.find(oi => oi.productId === cartItem.product.id);
+          const oldQty = oldItem?.quantity ?? 0;
+          const newQty = cartItem.qty;
+          const delta = newQty - oldQty;
+          if (delta !== 0) {
+            await db.products.update(cartItem.product.id!, { stock: cartItem.product.stock - delta, updatedAt: new Date() });
           }
         }
+        for (const oldItem of oldItems) {
+          const stillInCart = cart.find(c => c.product.id === oldItem.productId);
+          if (!stillInCart) {
+            const product = await db.products.get(oldItem.productId);
+            if (product) {
+              await db.products.update(oldItem.productId, { stock: product.stock + oldItem.quantity });
+            }
+          }
+        }
+
+        const updatedTx = await db.transactions.get(editingTxId);
+        toast.success(`Transaksi berhasil! ${updatedTx?.receiptNumber}`);
+        setLastTransaction(updatedTx || null);
+        setLastTxItems(itemRecords);
+        setReceiptOpen(true);
+      } else {
+        const receiptNumber = `TX${Date.now()}`;
+
+        const txData: Transaction = {
+          subtotal,
+          discountType: txDiscountType,
+          discountValue: Number(txDiscountValue) || 0,
+          discountAmount: txDiscountAmount,
+          total,
+          paymentMethodId: Number(paymentMethodId),
+          paymentAmount: paidAmount,
+          change,
+          profit: totalProfit,
+          date: new Date(),
+          receiptNumber,
+          status: 'completed',
+          customerName: customerName.trim() || undefined,
+          tableNumber: tableNumber.trim() || undefined,
+          remarks: remarks.trim() || undefined,
+          isSynced: 0,
+        };
+
+        const txId = await db.transactions.add(txData);
+
+        const itemRecords: TransactionItemRecord[] = cart.map(c => ({
+          transactionId: txId as number,
+          productId: c.product.id!,
+          productName: c.product.name,
+          quantity: c.qty,
+          price: c.product.price,
+          hpp: c.product.hpp,
+          discountType: c.discountType,
+          discountValue: c.discountValue,
+          discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
+          subtotal: getItemSubtotal(c),
+          notes: c.notes,
+        }));
+        await db.transactionItems.bulkAdd(itemRecords);
+
+        for (const item of cart) {
+          await db.products.update(item.product.id!, { stock: item.product.stock - item.qty, updatedAt: new Date() });
+        }
+
+        toast.success(`Transaksi berhasil! ${receiptNumber}`);
+        setLastTransaction({ ...txData, id: txId as number });
+        setLastTxItems(itemRecords);
+        setReceiptOpen(true);
       }
 
-      const updatedTx = await db.transactions.get(editingTxId);
-      toast.success(`Transaksi berhasil! ${updatedTx?.receiptNumber}`);
-      setLastTransaction(updatedTx || null);
-      setLastTxItems(itemRecords);
-      setReceiptOpen(true);
-    } else {
-      const receiptNumber = `TX${Date.now()}`;
+      doFullReset();
+      setCheckoutOpen(false);
+      setCartOpen(false);
 
-      const txData: Transaction = {
-        subtotal,
-        discountType: txDiscountType,
-        discountValue: Number(txDiscountValue) || 0,
-        discountAmount: txDiscountAmount,
-        total,
-        paymentMethodId: Number(paymentMethodId),
-        paymentAmount: paidAmount,
-        change,
-        profit: totalProfit,
-        date: new Date(),
-        receiptNumber,
-        status: 'completed',
-        customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
-        remarks: remarks.trim() || undefined,
-        isSynced: 0,
-      };
-
-      const txId = await db.transactions.add(txData);
-
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: txId as number,
-        productId: c.product.id!,
-        productName: c.product.name,
-        quantity: c.qty,
-        price: c.product.price,
-        hpp: c.product.hpp,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        discountAmount: c.discountType === 'percentage' ? c.product.price * c.qty * c.discountValue / 100 : c.discountType === 'nominal' ? c.discountValue : 0,
-        subtotal: getItemSubtotal(c),
-        notes: c.notes,
-      }));
-      await db.transactionItems.bulkAdd(itemRecords);
-
-      for (const item of cart) {
-        await db.products.update(item.product.id!, { stock: item.product.stock - item.qty, updatedAt: new Date() });
-      }
-
-      toast.success(`Transaksi berhasil! ${receiptNumber}`);
-      setLastTransaction({ ...txData, id: txId as number });
-      setLastTxItems(itemRecords);
-      setReceiptOpen(true);
+      // Trigger background sync
+      syncToCloud();
+    } catch (err) {
+      console.error(err);
+      toast.error('Gagal menyelesaikan transaksi');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    doFullReset();
-    setCheckoutOpen(false);
-    setCartOpen(false);
   };
 
   const cartCount = cart.reduce((s, c) => s + c.qty, 0);
@@ -470,9 +496,9 @@ export default function Kasir() {
   const rp = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
 
   return (
-    <div className="px-4 pt-6 pb-4 h-[calc(100vh-4rem)]">
-      <div className="flex flex-col md:flex-row gap-0 md:gap-4 h-full">
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+    <div className="px-4 pt-6 pb-4 h-auto md:h-[calc(100vh-4rem)]">
+      <div className="flex flex-col md:flex-row gap-0 md:gap-4 h-auto md:h-full">
+        <div className="flex-1 min-w-0 flex flex-col md:overflow-hidden">
           {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold flex items-center gap-2">
@@ -539,7 +565,7 @@ export default function Kasir() {
       </div>
 
       {/* Product Grid */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
+      <div className="flex-1 overflow-y-auto scrollbar-hide min-h-[300px] md:min-h-0">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-sm text-muted-foreground">
@@ -707,7 +733,7 @@ export default function Kasir() {
                   variant="outline"
                   className="flex-1 h-12 text-sm font-semibold"
                   onClick={saveOpenBill}
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || isSubmitting}
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Simpan Bill
@@ -884,7 +910,7 @@ export default function Kasir() {
                   variant="outline"
                   className="flex-1 h-12 text-sm font-semibold"
                   onClick={saveOpenBill}
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || isSubmitting}
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Simpan Bill
@@ -1064,9 +1090,13 @@ export default function Kasir() {
               </div>
             )}
 
-            <Button className="w-full h-12 text-base font-semibold" onClick={handleCheckout} disabled={!paymentMethodId || paidAmount < total}>
-              <Check className="w-5 h-5 mr-2" />
-              Konfirmasi Transaksi
+            <Button className="w-full h-12 text-base font-semibold" onClick={handleCheckout} disabled={!paymentMethodId || paidAmount < total || isSubmitting}>
+              {isSubmitting ? (
+                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <Check className="w-5 h-5 mr-2" />
+              )}
+              {isSubmitting ? 'Memproses...' : 'Konfirmasi Transaksi'}
             </Button>
           </div>
         </DialogContent>

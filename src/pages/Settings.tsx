@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { compressImage } from '@/lib/image-utils';
 
 const emojiOptions = ['🍽️', '🍔', '🍕', '☕', '🍰', '🍺', '🥤', '🍦', '🍜', '🍱', '🍖', '🍎', '🥕', '📦', '🎁', '🏷️'];
 
@@ -89,14 +90,15 @@ export default function Settings() {
     toast.success('Pengaturan toko disimpan');
   };
 
-  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setStoreLogo(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, 400, 0.8);
+        setStoreLogo(compressed);
+      } catch (err) {
+        toast.error('Gagal memproses gambar logo');
+      }
     }
   };
 

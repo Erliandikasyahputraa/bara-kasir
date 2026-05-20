@@ -17,6 +17,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import ReceiptDialog from '@/components/Receipt';
 import { toast } from 'sonner';
+import { syncToCloud } from '@/lib/sync';
 
 export default function TransactionHistory() {
   const navigate = useNavigate();
@@ -31,9 +32,10 @@ export default function TransactionHistory() {
   const [restoreStock, setRestoreStock] = useState(true);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'open'>('all');
 
-  const transactions = useLiveQuery(() =>
-    db.transactions.orderBy('date').reverse().toArray()
-  );
+  const transactions = useLiveQuery(async () => {
+    const list = await db.transactions.orderBy('date').reverse().toArray();
+    return list.filter(t => t.isDeleted !== 1);
+  });
 
   // Query all transaction items and build lookup map
   const txItemsMap = useLiveQuery(async () => {
@@ -126,17 +128,27 @@ export default function TransactionHistory() {
         for (const item of items) {
           const product = await db.products.get(item.productId);
           if (product) {
-            await db.products.update(item.productId, { stock: product.stock + item.quantity });
+            await db.products.update(item.productId, { stock: product.stock + item.quantity, updatedAt: new Date() });
           }
         }
       }
-      await db.transactionItems.where('transactionId').equals(selectedTx.id).delete();
-      await db.transactions.delete(selectedTx.id);
+      
+      // Soft delete: mark as deleted and unsynced
+      await db.transactions.update(selectedTx.id, {
+        isDeleted: 1,
+        deletedAt: new Date(),
+        isSynced: 0
+      });
+      
       setDeleteDialogOpen(false);
       setDetailOpen(false);
       setSelectedTx(null);
       toast.success('Transaksi berhasil dihapus');
-    } catch {
+      
+      // Trigger background sync immediately
+      syncToCloud();
+    } catch (err) {
+      console.error(err);
       toast.error('Gagal menghapus transaksi');
     }
   };

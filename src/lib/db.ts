@@ -52,6 +52,7 @@ export interface StockIn {
   totalPrice: number;
   date: Date;
   notes: string;
+  isSynced?: number;
 }
 
 export interface StockOut {
@@ -61,6 +62,7 @@ export interface StockOut {
   reason: string; // rusak, hilang, retur, dll
   date: Date;
   notes: string;
+  isSynced?: number;
 }
 
 export interface HppHistory {
@@ -70,6 +72,7 @@ export interface HppHistory {
   newHpp: number;
   source: 'stock_in' | 'manual';
   date: Date;
+  isSynced?: number;
 }
 
 export interface PaymentMethod {
@@ -101,6 +104,8 @@ export interface Transaction {
   remarks?: string;
   openedAt?: Date;
   closedAt?: Date;
+  isDeleted?: number; // 0 = active, 1 = deleted
+  deletedAt?: Date | null;
 }
 
 export interface TransactionItemRecord {
@@ -302,6 +307,28 @@ class PosDatabase extends Dexie {
       await tx.table('suppliers').toCollection().modify(s => { s.isSynced = 0; });
       await tx.table('transactions').toCollection().modify(t => { t.isSynced = 0; });
     });
+
+    // Version 6 — Transaction soft delete & stock tables sync support
+    this.version(6).stores({
+      categories:       '++id, name, isDeleted, isSynced',
+      products:         '++id, name, &sku, categoryId, barcode, isDeleted, isSynced',
+      suppliers:        '++id, name, isDeleted, isSynced',
+      transactions:     '++id, date, &receiptNumber, paymentMethodId, status, orderNumber, isSynced, isDeleted',
+      transactionItems: '++id, transactionId, productId',
+      stockIns:         '++id, productId, supplierId, date, isSynced',
+      stockOuts:        '++id, productId, date, isSynced',
+      hppHistory:       '++id, productId, date, isSynced',
+      paymentMethods:   '++id, name, category',
+      storeSettings:    '++id',
+    }).upgrade(async (tx) => {
+      await tx.table('transactions').toCollection().modify(t => {
+        t.isDeleted = 0;
+        t.deletedAt = null;
+      });
+      await tx.table('stockIns').toCollection().modify(si => { si.isSynced = 0; });
+      await tx.table('stockOuts').toCollection().modify(so => { so.isSynced = 0; });
+      await tx.table('hppHistory').toCollection().modify(h => { h.isSynced = 0; });
+    });
   }
 }
 
@@ -327,6 +354,15 @@ db.suppliers.hook('updating', syncHook);
 
 db.transactions.hook('creating', (id, obj) => { obj.isSynced = 0; });
 db.transactions.hook('updating', syncHook);
+
+db.stockIns.hook('creating', (id, obj) => { obj.isSynced = 0; });
+db.stockIns.hook('updating', syncHook);
+
+db.stockOuts.hook('creating', (id, obj) => { obj.isSynced = 0; });
+db.stockOuts.hook('updating', syncHook);
+
+db.hppHistory.hook('creating', (id, obj) => { obj.isSynced = 0; });
+db.hppHistory.hook('updating', syncHook);
 
 // Seed default data
 export async function seedDefaultData() {

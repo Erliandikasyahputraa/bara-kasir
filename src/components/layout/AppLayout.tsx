@@ -22,14 +22,40 @@ export default function AppLayout() {
   const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
   
   const unsyncedCount = useLiveQuery(async () => {
-    const c = await db.categories.where('isSynced').equals(0).count();
-    const p = await db.products.where('isSynced').equals(0).count();
-    const t = await db.transactions.where('isSynced').equals(0).count();
-    return c + p + t;
+    try {
+      const counts = await Promise.all([
+        db.categories.where('isSynced').equals(0).count(),
+        db.products.where('isSynced').equals(0).count(),
+        db.transactions.where('isSynced').equals(0).count(),
+        db.suppliers.where('isSynced').equals(0).count(),
+        db.stockIns.where('isSynced').equals(0).count(),
+        db.stockOuts.where('isSynced').equals(0).count(),
+        db.hppHistory.where('isSynced').equals(0).count(),
+      ]);
+      return counts.reduce((a, b) => a + b, 0);
+    } catch {
+      return 0;
+    }
   }, []);
 
   const { session } = useAuth();
   const [isInitialSync, setIsInitialSync] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncToCloud();
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (session) {
@@ -80,18 +106,34 @@ export default function AppLayout() {
           <span className="font-bold text-sm truncate max-w-[150px]">{storeSettings.storeName}</span>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button 
-            onClick={() => syncToCloud()}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-full transition-colors hover:bg-muted"
-            title={unsyncedCount === 0 ? "Data sinkron" : `${unsyncedCount} data menunggu sinkronisasi`}
-          >
-            {unsyncedCount === 0 ? (
-              <Cloud className="w-4 h-4 text-success" />
-            ) : (
-              <RefreshCw className="w-4 h-4 text-warning animate-spin-slow" />
-            )}
-          </button>
+        <div className="flex items-center gap-1.5">
+          {!isOnline ? (
+            <div 
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold select-none border border-red-500/20 animate-pulse"
+              title="Koneksi terputus. Data disimpan lokal."
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              Offline
+            </div>
+          ) : unsyncedCount > 0 ? (
+            <button 
+              onClick={() => syncToCloud()}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-semibold transition-colors hover:bg-yellow-500/20 border border-yellow-500/20"
+              title={`${unsyncedCount} data belum disinkronkan. Klik untuk paksa sinkronisasi.`}
+            >
+              <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1" />
+              {unsyncedCount} pending
+            </button>
+          ) : (
+            <button 
+              onClick={() => syncToCloud()}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold transition-colors hover:bg-emerald-500/20 border border-emerald-500/20"
+              title="Semua data sinkron dengan cloud"
+            >
+              <Cloud className="w-3.5 h-3.5 mr-1" />
+              Aktif
+            </button>
+          )}
           
           <button 
             onClick={async () => {
@@ -99,7 +141,7 @@ export default function AppLayout() {
               if (error) toast.error('Gagal keluar');
               else toast.success('Berhasil keluar');
             }}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+            className="p-2 text-muted-foreground hover:text-destructive transition-colors ml-1"
             title="Keluar"
           >
             <LogOut className="w-4 h-4" />

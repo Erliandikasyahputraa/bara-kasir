@@ -1,11 +1,11 @@
 /**
  * Compress and resize an image file to a base64 JPEG string.
- * Target: max 200x200px, JPEG quality 0.7 (~10-20KB per image)
+ * Target: max 600x600px, JPEG quality 0.85 (~30-50KB per image)
  */
 export function compressImage(
   file: File,
-  maxSize = 200,
-  quality = 0.7
+  maxSize = 600,
+  quality = 0.85
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
