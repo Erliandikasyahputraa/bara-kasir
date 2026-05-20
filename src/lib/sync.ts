@@ -29,6 +29,67 @@ export async function syncToCloud() {
   try {
     let syncedCount = 0;
 
+    // 0. Sync Store Settings (Two-way based on updatedAt)
+    if (await checkTableExists('store_settings')) {
+      const settings = await db.storeSettings.toCollection().first();
+      const { data: cloudSettings } = await supabase.from('store_settings').select('*').limit(1).maybeSingle();
+
+      if (settings && cloudSettings) {
+        const localTime = settings.updatedAt ? new Date(settings.updatedAt).getTime() : 0;
+        const cloudTime = cloudSettings.updated_at ? new Date(cloudSettings.updated_at).getTime() : 0;
+
+        if (localTime > cloudTime) {
+          // Push local to cloud (local is newer)
+          await supabase.from('store_settings').upsert({
+            id: 1,
+            store_name: settings.storeName,
+            address: settings.address,
+            phone: settings.phone,
+            logo: settings.logo || null,
+            onboarding_done: settings.onboardingDone,
+            updated_at: settings.updatedAt || new Date()
+          });
+        } else if (cloudTime > localTime) {
+          // Pull cloud to local (cloud is newer)
+          await db.storeSettings.update(settings.id!, {
+            storeName: cloudSettings.store_name,
+            address: cloudSettings.address || '',
+            phone: cloudSettings.phone || '',
+            logo: cloudSettings.logo || null,
+            onboardingDone: cloudSettings.onboarding_done,
+            updatedAt: new Date(cloudSettings.updated_at)
+          });
+          // Update favicon instantly if logo changed
+          import('./favicon').then(({ updateDynamicFavicon }) => updateDynamicFavicon());
+        }
+      } else if (settings && !cloudSettings) {
+        // Push local to cloud (first time)
+        await supabase.from('store_settings').upsert({
+          id: 1,
+          store_name: settings.storeName,
+          address: settings.address,
+          phone: settings.phone,
+          logo: settings.logo || null,
+          onboarding_done: settings.onboardingDone,
+          updated_at: settings.updatedAt || new Date()
+        });
+      } else if (!settings && cloudSettings) {
+        // Pull cloud to local (first time)
+        await db.storeSettings.add({
+          storeName: cloudSettings.store_name,
+          address: cloudSettings.address || '',
+          phone: cloudSettings.phone || '',
+          logo: cloudSettings.logo || null,
+          receiptFooter: 'Terima kasih atas kunjungan Anda!',
+          onboardingDone: cloudSettings.onboarding_done,
+          lastBackupAt: null,
+          deviceId: crypto.randomUUID(),
+          updatedAt: new Date(cloudSettings.updated_at || 0)
+        });
+        import('./favicon').then(({ updateDynamicFavicon }) => updateDynamicFavicon());
+      }
+    }
+
     // 1. Sync Categories (Two-way)
     if (await checkTableExists('categories')) {
       const { data: cloudCats } = await supabase.from('categories').select('*');
@@ -260,8 +321,28 @@ export async function syncToCloud() {
       }
     }
 
-    // 5. Sync StockIns (if exists)
+    // 5. Sync StockIns (Two-way if exists)
     if (await checkTableExists('stock_ins')) {
+      const { data: cloudStockIns } = await supabase.from('stock_ins').select('*');
+      if (cloudStockIns) {
+        for (const si of cloudStockIns) {
+          const localSi = await db.stockIns.get(si.id);
+          if (!localSi) {
+            await db.stockIns.add({
+              id: si.id,
+              productId: si.product_id,
+              supplierId: si.supplier_id,
+              quantity: si.quantity,
+              buyPrice: si.buy_price,
+              totalPrice: si.total_price,
+              date: new Date(si.date),
+              notes: si.notes,
+              isSynced: 1
+            });
+          }
+        }
+      }
+
       const unsyncedStockIns = await db.stockIns.where('isSynced').equals(0).toArray();
       for (const si of unsyncedStockIns) {
         const { error } = await supabase.from('stock_ins').upsert({
@@ -281,8 +362,26 @@ export async function syncToCloud() {
       }
     }
 
-    // 6. Sync StockOuts (if exists)
+    // 6. Sync StockOuts (Two-way if exists)
     if (await checkTableExists('stock_outs')) {
+      const { data: cloudStockOuts } = await supabase.from('stock_outs').select('*');
+      if (cloudStockOuts) {
+        for (const so of cloudStockOuts) {
+          const localSo = await db.stockOuts.get(so.id);
+          if (!localSo) {
+            await db.stockOuts.add({
+              id: so.id,
+              productId: so.product_id,
+              quantity: so.quantity,
+              reason: so.reason,
+              date: new Date(so.date),
+              notes: so.notes,
+              isSynced: 1
+            });
+          }
+        }
+      }
+
       const unsyncedStockOuts = await db.stockOuts.where('isSynced').equals(0).toArray();
       for (const so of unsyncedStockOuts) {
         const { error } = await supabase.from('stock_outs').upsert({
@@ -300,8 +399,26 @@ export async function syncToCloud() {
       }
     }
 
-    // 7. Sync HppHistory (if exists)
+    // 7. Sync HppHistory (Two-way if exists)
     if (await checkTableExists('hpp_history')) {
+      const { data: cloudHpp } = await supabase.from('hpp_history').select('*');
+      if (cloudHpp) {
+        for (const h of cloudHpp) {
+          const localH = await db.hppHistory.get(h.id);
+          if (!localH) {
+            await db.hppHistory.add({
+              id: h.id,
+              productId: h.product_id,
+              oldHpp: h.old_hpp,
+              newHpp: h.new_hpp,
+              source: h.source,
+              date: new Date(h.date),
+              isSynced: 1
+            });
+          }
+        }
+      }
+
       const unsyncedHpp = await db.hppHistory.where('isSynced').equals(0).toArray();
       for (const h of unsyncedHpp) {
         const { error } = await supabase.from('hpp_history').upsert({

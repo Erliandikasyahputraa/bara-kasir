@@ -70,12 +70,14 @@ export default function Settings() {
   const saveStore = async () => {
     if (!storeName.trim()) return;
     const settings = await db.storeSettings.toCollection().first();
+    const now = new Date();
     if (settings) {
       await db.storeSettings.update(settings.id!, {
         storeName,
         address: storeAddr,
         phone: storePhone,
         logo: storeLogo,
+        updatedAt: now,
       });
     } else {
       await db.storeSettings.add({
@@ -86,7 +88,8 @@ export default function Settings() {
         onboardingDone: true,
         receiptFooter: 'Terima kasih atas kunjungan Anda!',
         lastBackupAt: null,
-        deviceId: crypto.randomUUID()
+        deviceId: crypto.randomUUID(),
+        updatedAt: now,
       });
     }
     setStoreDialog(false);

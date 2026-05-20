@@ -134,6 +134,7 @@ export interface StoreSettings {
   themeColor?: string; // HSL hue string e.g. "25" for orange
   logo?: string; // base64 JPEG compressed via compressImage()
   deviceId: string;
+  updatedAt?: Date;
 }
 
 // === Database ===
@@ -394,12 +395,18 @@ export async function seedDefaultData() {
       onboardingDone: false,
       lastBackupAt: null,
       deviceId: crypto.randomUUID(),
+      updatedAt: new Date(0),
     });
   } else {
-    // Fallback: if storeSettings exists but has no deviceId, generate one
+    // Fallback: if storeSettings exists but has no deviceId or updatedAt, generate them
     const settings = await db.storeSettings.toCollection().first();
-    if (settings && !settings.deviceId) {
-      await db.storeSettings.update(settings.id!, { deviceId: crypto.randomUUID() });
+    if (settings) {
+      const updates: any = {};
+      if (!settings.deviceId) updates.deviceId = crypto.randomUUID();
+      if (!settings.updatedAt) updates.updatedAt = new Date(0);
+      if (Object.keys(updates).length > 0) {
+        await db.storeSettings.update(settings.id!, updates);
+      }
     }
   }
 }
