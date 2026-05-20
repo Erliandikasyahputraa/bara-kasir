@@ -29,6 +29,8 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { compressImage } from '@/lib/image-utils';
+import ThemeColorPicker from '@/components/ThemeColorPicker';
+import { setThemeColor } from '@/hooks/use-theme-color';
 
 const emojiOptions = ['🍽️', '🍔', '🍕', '☕', '🍰', '🍺', '🥤', '🍦', '🍜', '🍱', '🍖', '🍎', '🥕', '📦', '🎁', '🏷️'];
 
@@ -207,25 +209,18 @@ export default function Settings() {
         </h2>
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">Warna Tema</p>
                 <p className="text-xs text-muted-foreground">Pilih warna utama aplikasi</p>
               </div>
-              <div className="flex gap-2">
-                {['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'].map(color => (
-                  <button
-                    key={color}
-                    onClick={async () => {
-                      const settings = await db.storeSettings.toCollection().first();
-                      if (settings) await db.storeSettings.update(settings.id!, { themeColor: color });
-                      toast.success('Warna tema diperbarui');
-                    }}
-                    className={`w-6 h-6 rounded-full border-2 ${storeSettings?.themeColor === color ? 'border-foreground' : 'border-transparent'}`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
+              <ThemeColorPicker
+                value={storeSettings?.themeColor ?? '25'}
+                onChange={async (hue) => {
+                  await setThemeColor(hue);
+                  toast.success('Warna tema diperbarui');
+                }}
+              />
             </div>
           </CardContent>
         </Card>

@@ -778,15 +778,15 @@ export default function Kasir() {
       {/* Cart Sheet (mobile only) */}
       <div className="md:hidden">
       <Sheet open={cartOpen} onOpenChange={(open) => { setCartOpen(open); if (!open) setEditingItemNotes(null); }}>
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl max-w-lg mx-auto">
+        <SheetContent side="bottom" className="h-[85vh] landscape:h-full rounded-t-2xl landscape:rounded-none max-w-lg mx-auto">
           <SheetHeader>
             <SheetTitle className="text-left">
               Keranjang ({cartCount} item)
               {editingTxId && <span className="text-xs font-normal text-muted-foreground ml-2">— edit open bill</span>}
             </SheetTitle>
           </SheetHeader>
-          <div className="flex flex-col h-[calc(100%-3rem)] mt-2">
-            <div className="flex-1 overflow-y-auto space-y-3 pb-4">
+          <div className="flex flex-col h-[calc(100%-3rem)] landscape:h-full mt-2 landscape:overflow-y-auto pb-10">
+            <div className="flex-1 overflow-y-auto landscape:overflow-y-visible landscape:h-auto space-y-3 pb-4">
               {cart.map(item => (
                 <div key={item.product.id} className="bg-muted/50 p-3 rounded-xl space-y-1.5">
                   <div className="flex items-center gap-3">

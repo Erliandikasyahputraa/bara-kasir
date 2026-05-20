@@ -50,7 +50,7 @@ export default function BottomNav() {
                     'bg-primary text-primary-foreground',
                     isActive && 'ring-4 ring-primary/20'
                   )}>
-                    <Icon className="w-6 h-6 landscape:w-4.5 landscape:h-4.5" strokeWidth={2.5} />
+                    <Icon className="w-6 h-6 landscape:w-4 landscape:h-4" strokeWidth={2.5} />
                   </div>
                   <span className={cn(
                     'text-[10px] font-bold leading-tight mt-0.5 landscape:hidden',
@@ -63,7 +63,7 @@ export default function BottomNav() {
                     'flex items-center justify-center w-10 h-7 landscape:h-6 rounded-full transition-colors',
                     isActive && 'bg-primary/10'
                   )}>
-                    <Icon className="w-5 h-5 landscape:w-4.5 landscape:h-4.5" strokeWidth={isActive ? 2.5 : 2} />
+                    <Icon className="w-5 h-5 landscape:w-4 landscape:h-4" strokeWidth={isActive ? 2.5 : 2} />
                   </div>
                   <span className="text-[10px] landscape:text-[9px] font-semibold leading-tight">{label}</span>
                 </>
