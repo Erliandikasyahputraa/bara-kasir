@@ -20,6 +20,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import SplashScreen from "./components/SplashScreen";
+import { updateDynamicFavicon } from "@/lib/favicon";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const AppContent = () => {
 
   useEffect(() => {
     checkVersion();
+    updateDynamicFavicon();
   }, []);
 
   if (showSplash) {

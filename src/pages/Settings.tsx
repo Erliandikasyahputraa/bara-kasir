@@ -31,6 +31,7 @@ import { supabase } from '@/lib/supabase';
 import { compressImage } from '@/lib/image-utils';
 import ThemeColorPicker from '@/components/ThemeColorPicker';
 import { setThemeColor } from '@/hooks/use-theme-color';
+import { updateDynamicFavicon } from '@/lib/favicon';
 
 const emojiOptions = ['🍽️', '🍔', '🍕', '☕', '🍰', '🍺', '🥤', '🍦', '🍜', '🍱', '🍖', '🍎', '🥕', '📦', '🎁', '🏷️'];
 
@@ -89,6 +90,7 @@ export default function Settings() {
       });
     }
     setStoreDialog(false);
+    updateDynamicFavicon();
     toast.success('Pengaturan toko disimpan');
   };
 

@@ -92,23 +92,15 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
             {storeName}
           </h1>
-          <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">
-            Sistem Kasir Pintar & Modern
-          </p>
         </div>
 
         {/* Loading Progress Indicator */}
-        <div className="w-48 h-1 bg-muted rounded-full overflow-hidden mt-4">
+        <div className="w-48 h-1 bg-muted rounded-full overflow-hidden mt-2">
           <div
             className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-100 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
-
-        {/* Version footprint */}
-        <span className="text-[10px] text-muted-foreground/60 font-mono tracking-wider absolute bottom-[-80px]">
-          v1.3.0 · PWA Ready
-        </span>
       </div>
     </div>
   );
