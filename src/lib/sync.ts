@@ -29,35 +29,6 @@ export async function syncToCloud() {
   try {
     let syncedCount = 0;
 
-    // 0. Sync Store Settings
-    if (await checkTableExists('store_settings')) {
-      const settings = await db.storeSettings.toCollection().first();
-      const { data: cloudSettings } = await supabase.from('store_settings').select('*').limit(1).maybeSingle();
-
-      if (settings) {
-        // Push local to cloud
-        await supabase.from('store_settings').upsert({
-          id: 1, // Kita asumsikan satu store per tenant untuk sekarang
-          store_name: settings.storeName,
-          address: settings.address,
-          phone: settings.phone,
-          onboarding_done: settings.onboardingDone,
-          updated_at: new Date()
-        });
-      } else if (cloudSettings) {
-        // Pull cloud to local
-        await db.storeSettings.add({
-          storeName: cloudSettings.store_name,
-          address: cloudSettings.address,
-          phone: cloudSettings.phone,
-          receiptFooter: 'Terima kasih atas kunjungan Anda!',
-          onboardingDone: cloudSettings.onboarding_done,
-          lastBackupAt: null,
-          deviceId: crypto.randomUUID()
-        });
-      }
-    }
-
     // 1. Sync Categories (Two-way)
     if (await checkTableExists('categories')) {
       const { data: cloudCats } = await supabase.from('categories').select('*');
