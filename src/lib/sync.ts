@@ -211,8 +211,76 @@ export async function syncToCloud() {
       }
     }
 
-    // 3. Sync Transactions (with Soft Delete integration)
+    // 3. Sync Transactions (Bidirectional & Conflict-free)
     if (await checkTableExists('transactions')) {
+      const { data: cloudTxs } = await supabase.from('transactions').select('*');
+      const { data: cloudItems } = await checkTableExists('transaction_items')
+        ? await supabase.from('transaction_items').select('*')
+        : { data: null };
+
+      if (cloudTxs) {
+        const cloudTxIds = new Set(cloudTxs.map(t => t.id));
+
+        // A. Pull new transactions from Cloud to Local
+        for (const tx of cloudTxs) {
+          const localTx = await db.transactions.get(tx.id) || 
+                          await db.transactions.where('receiptNumber').equals(tx.receipt_number).first();
+          if (!localTx) {
+            // Add transaction locally with the exact ID from cloud
+            await db.transactions.add({
+              id: tx.id,
+              receiptNumber: tx.receipt_number,
+              subtotal: tx.subtotal,
+              discountAmount: tx.discount_amount,
+              total: tx.total,
+              paymentMethodId: tx.payment_method_id,
+              paymentAmount: tx.payment_amount,
+              change: tx.change,
+              profit: tx.profit,
+              status: tx.status,
+              customerName: tx.customer_name || undefined,
+              tableNumber: tx.table_number || undefined,
+              remarks: tx.remarks || undefined,
+              date: new Date(tx.date),
+              isSynced: 1,
+              isDeleted: 0,
+              deletedAt: null
+            });
+
+            // Add corresponding transaction items
+            if (cloudItems) {
+              const matchedItems = cloudItems.filter(item => item.transaction_id === tx.id);
+              for (const item of matchedItems) {
+                const localItem = await db.transactionItems.get(item.id);
+                if (!localItem) {
+                  await db.transactionItems.add({
+                    id: item.id,
+                    transactionId: item.transaction_id,
+                    productId: item.product_id,
+                    productName: item.product_name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    hpp: item.hpp,
+                    subtotal: item.subtotal,
+                    notes: item.notes || undefined
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        // B. Handle Deletion Propagation (If local transaction is synced but no longer in cloud)
+        const localSyncedTxs = await db.transactions.where('isSynced').equals(1).toArray();
+        for (const localTx of localSyncedTxs) {
+          if (!cloudTxIds.has(localTx.id!)) {
+            await db.transactionItems.where('transactionId').equals(localTx.id!).delete();
+            await db.transactions.delete(localTx.id!);
+          }
+        }
+      }
+
+      // C. Push unsynced transactions from Local to Cloud
       const unsyncedTransactions = await db.transactions.where('isSynced').equals(0).toArray();
       for (const tx of unsyncedTransactions) {
         // Handle local soft delete propagation to cloud
@@ -230,43 +298,149 @@ export async function syncToCloud() {
           continue;
         }
 
-        const { error } = await supabase.from('transactions').upsert({
-          id: tx.id,
-          receipt_number: tx.receiptNumber,
-          subtotal: tx.subtotal,
-          discount_amount: tx.discountAmount,
-          total: tx.total,
-          payment_method_id: tx.paymentMethodId,
-          payment_amount: tx.paymentAmount,
-          change: tx.change,
-          profit: tx.profit,
-          status: tx.status,
-          customer_name: tx.customerName,
-          table_number: tx.tableNumber,
-          remarks: tx.remarks,
-          date: tx.date
-        });
-        
-        if (!error) {
+        // Check if this transaction is already in Supabase by receipt_number
+        const { data: existingCloudTx } = await supabase
+          .from('transactions')
+          .select('id')
+          .eq('receipt_number', tx.receiptNumber)
+          .maybeSingle();
+
+        let cloudTxId: number;
+
+        if (existingCloudTx) {
+          cloudTxId = existingCloudTx.id;
+        } else {
+          // Insert new transaction to Supabase (let Supabase generate the ID)
+          const { data: newCloudTx, error: insertError } = await supabase
+            .from('transactions')
+            .insert({
+              receipt_number: tx.receiptNumber,
+              subtotal: tx.subtotal,
+              discount_amount: tx.discountAmount,
+              total: tx.total,
+              payment_method_id: tx.paymentMethodId,
+              payment_amount: tx.paymentAmount,
+              change: tx.change,
+              profit: tx.profit,
+              status: tx.status,
+              customer_name: tx.customerName || null,
+              table_number: tx.tableNumber || null,
+              remarks: tx.remarks || null,
+              date: tx.date
+            })
+            .select('id')
+            .single();
+
+          if (insertError || !newCloudTx) {
+            console.error('Failed to insert transaction to Supabase:', insertError);
+            continue;
+          }
+          cloudTxId = newCloudTx.id;
+        }
+
+        const localId = tx.id!;
+        if (localId !== cloudTxId) {
+          // Delete old local transaction and add it with the new ID
+          await db.transactions.delete(localId);
+          await db.transactions.add({
+            ...tx,
+            id: cloudTxId,
+            isSynced: 1
+          });
+
+          // Update local transaction items foreign key reference
+          const localItems = await db.transactionItems.where('transactionId').equals(localId).toArray();
+          for (const item of localItems) {
+            const oldItemId = item.id!;
+            const { data: existingCloudItem } = await supabase
+              .from('transaction_items')
+              .select('id')
+              .eq('transaction_id', cloudTxId)
+              .eq('product_id', item.productId)
+              .maybeSingle();
+
+            let cloudItemId: number;
+            if (existingCloudItem) {
+              cloudItemId = existingCloudItem.id;
+            } else {
+              const { data: newCloudItem, error: itemInsertError } = await supabase
+                .from('transaction_items')
+                .insert({
+                  transaction_id: cloudTxId,
+                  product_id: item.productId,
+                  product_name: item.productName,
+                  quantity: item.quantity,
+                  price: item.price,
+                  hpp: item.hpp,
+                  subtotal: item.subtotal,
+                  notes: item.notes || null
+                })
+                .select('id')
+                .single();
+
+              if (itemInsertError || !newCloudItem) {
+                console.error('Failed to insert transaction item:', itemInsertError);
+                continue;
+              }
+              cloudItemId = newCloudItem.id;
+            }
+
+            await db.transactionItems.delete(oldItemId);
+            await db.transactionItems.add({
+              ...item,
+              id: cloudItemId,
+              transactionId: cloudTxId
+            });
+          }
+        } else {
+          // The local ID already matches the cloud ID
           if (await checkTableExists('transaction_items')) {
-            const items = await db.transactionItems.where('transactionId').equals(tx.id!).toArray();
+            const items = await db.transactionItems.where('transactionId').equals(localId).toArray();
             for (const item of items) {
-              await supabase.from('transaction_items').upsert({
-                id: item.id,
-                transaction_id: tx.id,
-                product_id: item.productId,
-                product_name: item.productName,
-                quantity: item.quantity,
-                price: item.price,
-                hpp: item.hpp,
-                subtotal: item.subtotal,
-                notes: item.notes
-              });
+              const { data: existingCloudItem } = await supabase
+                .from('transaction_items')
+                .select('id')
+                .eq('transaction_id', localId)
+                .eq('product_id', item.productId)
+                .maybeSingle();
+
+              let cloudItemId: number;
+              if (existingCloudItem) {
+                cloudItemId = existingCloudItem.id;
+              } else {
+                const { data: newCloudItem, error: itemInsertError } = await supabase
+                  .from('transaction_items')
+                  .insert({
+                    transaction_id: localId,
+                    product_id: item.productId,
+                    product_name: item.productName,
+                    quantity: item.quantity,
+                    price: item.price,
+                    hpp: item.hpp,
+                    subtotal: item.subtotal,
+                    notes: item.notes || null
+                  })
+                  .select('id')
+                  .single();
+
+                if (itemInsertError || !newCloudItem) {
+                  continue;
+                }
+                cloudItemId = newCloudItem.id;
+              }
+
+              if (item.id !== cloudItemId) {
+                await db.transactionItems.delete(item.id!);
+                await db.transactionItems.add({
+                  ...item,
+                  id: cloudItemId
+                });
+              }
             }
           }
-          await db.transactions.update(tx.id!, { isSynced: 1 });
-          syncedCount++;
+          await db.transactions.update(localId, { isSynced: 1 });
         }
+        syncedCount++;
       }
     }
 
