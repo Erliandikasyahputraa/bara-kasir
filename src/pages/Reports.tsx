@@ -13,7 +13,8 @@ export default function Laporan() {
 
   const transactions = useLiveQuery(async () => {
     const since = startOfDay(subDays(new Date(), days));
-    return db.transactions.where('date').aboveOrEqual(since).toArray();
+    const all = await db.transactions.where('date').aboveOrEqual(since).toArray();
+    return all.filter(t => t.status !== 'open' && t.isDeleted !== 1);
   }, [days]);
 
   // Query transaction items for the filtered transactions

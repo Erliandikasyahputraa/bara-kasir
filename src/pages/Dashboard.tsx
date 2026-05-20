@@ -20,19 +20,20 @@ export default function Dashboard() {
 
   const todayTransactions = useLiveQuery(async () => {
     const all = await db.transactions.where('date').aboveOrEqual(today).toArray();
-    return all.filter(t => t.status !== 'open');
+    return all.filter(t => t.status !== 'open' && t.isDeleted !== 1);
   }, []);
 
   const openBillsCount = useLiveQuery(async () => {
     const open = await db.transactions.where('status').equals('open').toArray();
-    return open.length;
+    return open.filter(t => t.isDeleted !== 1).length;
   }, []);
 
   const lowStockProducts = useLiveQuery(() => db.products.filter(p => p.isDeleted === 0 && p.stock <= 5).toArray());
 
-  const recentTransactions = useLiveQuery(() =>
-    db.transactions.orderBy('date').reverse().limit(5).toArray()
-  );
+  const recentTransactions = useLiveQuery(async () => {
+    const all = await db.transactions.orderBy('date').reverse().toArray();
+    return all.filter(t => t.isDeleted !== 1).slice(0, 5);
+  });
 
   // Query items for recent transactions
   const recentTxItems = useLiveQuery(async () => {

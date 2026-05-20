@@ -61,7 +61,10 @@ export default function Kasir() {
   const categories = useLiveQuery(() => db.categories.where('isDeleted').equals(0).toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
   const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
-  const openBills = useLiveQuery(() => db.transactions.where('status').equals('open').reverse().sortBy('date'));
+  const openBills = useLiveQuery(async () => {
+    const bills = await db.transactions.where('status').equals('open').reverse().sortBy('date');
+    return bills.filter(b => b.isDeleted !== 1);
+  });
 
   const cartProductIds = new Set(cart.map(c => c.product.id));
 
@@ -156,6 +159,7 @@ export default function Kasir() {
           tableNumber: tableNumber.trim() || undefined,
           remarks: remarks.trim() || undefined,
           date: now,
+          isSynced: 0
         });
 
         await db.transactionItems.where('transactionId').equals(editingTxId).delete();
@@ -291,11 +295,15 @@ export default function Kasir() {
     for (const item of items) {
       const product = await db.products.get(item.productId);
       if (product) {
-        await db.products.update(item.productId, { stock: product.stock + item.quantity });
+        await db.products.update(item.productId, { stock: product.stock + item.quantity, updatedAt: new Date() });
       }
     }
     await db.transactionItems.where('transactionId').equals(tx.id).delete();
-    await db.transactions.delete(tx.id);
+    await db.transactions.update(tx.id, {
+      isDeleted: 1,
+      deletedAt: new Date(),
+      isSynced: 0
+    });
     toast.success(`Bill ${tx.receiptNumber} dibatalkan`);
     setCancelDialogOpen(false);
     setCancelTargetTx(null);
@@ -344,6 +352,7 @@ export default function Kasir() {
           customerName: customerName.trim() || undefined,
           tableNumber: tableNumber.trim() || undefined,
           closedAt: new Date(),
+          isSynced: 0
         });
 
         await db.transactionItems.where('transactionId').equals(editingTxId).delete();
