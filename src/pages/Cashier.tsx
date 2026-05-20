@@ -785,7 +785,7 @@ export default function Kasir() {
               {editingTxId && <span className="text-xs font-normal text-muted-foreground ml-2">— edit open bill</span>}
             </SheetTitle>
           </SheetHeader>
-          <div className="flex flex-col h-full mt-4">
+          <div className="flex flex-col h-[calc(100%-3rem)] mt-2">
             <div className="flex-1 overflow-y-auto space-y-3 pb-4">
               {cart.map(item => (
                 <div key={item.product.id} className="bg-muted/50 p-3 rounded-xl space-y-1.5">
@@ -949,7 +949,7 @@ export default function Kasir() {
               Open Bills ({openBillsCount})
             </SheetTitle>
           </SheetHeader>
-          <div className="mt-4 overflow-y-auto pb-6 space-y-2">
+          <div className="mt-4 overflow-y-auto h-[calc(100%-3rem)] pb-6 space-y-2">
             {!openBills || openBills.length === 0 ? (
               <div className="text-center py-12">
                 <ClipboardList className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
@@ -996,7 +996,7 @@ export default function Kasir() {
 
       {/* Checkout Dialog */}
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="max-w-[95vw] rounded-xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>Pembayaran</DialogTitle>
           </DialogHeader>
@@ -1104,7 +1104,7 @@ export default function Kasir() {
 
       {/* Discount Dialog */}
       <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
-        <DialogContent className="max-w-[95vw] rounded-xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-[400px] max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>Diskon Transaksi</DialogTitle>
           </DialogHeader>

@@ -22,7 +22,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-end justify-around h-16 max-w-lg md:max-w-6xl mx-auto px-2 md:px-4">
+      <div className="flex items-end justify-around h-16 landscape:h-12 max-w-lg md:max-w-6xl landscape:max-w-none mx-auto px-2 md:px-4">
         {navItems.map(({ to, icon: Icon, label, isCta }) => (
           <NavLink
             key={to}
@@ -32,9 +32,9 @@ export default function BottomNav() {
               cn(
                 'flex flex-col items-center gap-0.5 transition-colors min-w-[52px]',
                 isCta
-                  ? 'relative -top-4'
+                  ? 'relative -top-4 landscape:-top-1.5'
                   : cn(
-                      'px-2 py-1.5 rounded-xl',
+                      'px-2 py-1.5 landscape:py-0.5 rounded-xl',
                       isActive
                         ? 'text-primary'
                         : 'text-muted-foreground hover:text-foreground'
@@ -46,26 +46,26 @@ export default function BottomNav() {
               isCta ? (
                 <>
                   <div className={cn(
-                    'w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95',
+                    'w-14 h-14 landscape:w-9 landscape:h-9 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95',
                     'bg-primary text-primary-foreground',
                     isActive && 'ring-4 ring-primary/20'
                   )}>
-                    <Icon className="w-6 h-6" strokeWidth={2.5} />
+                    <Icon className="w-6 h-6 landscape:w-4.5 landscape:h-4.5" strokeWidth={2.5} />
                   </div>
                   <span className={cn(
-                    'text-[10px] font-bold leading-tight mt-0.5',
+                    'text-[10px] font-bold leading-tight mt-0.5 landscape:hidden',
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   )}>{label}</span>
                 </>
               ) : (
                 <>
                   <div className={cn(
-                    'flex items-center justify-center w-10 h-7 rounded-full transition-colors',
+                    'flex items-center justify-center w-10 h-7 landscape:h-6 rounded-full transition-colors',
                     isActive && 'bg-primary/10'
                   )}>
-                    <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+                    <Icon className="w-5 h-5 landscape:w-4.5 landscape:h-4.5" strokeWidth={isActive ? 2.5 : 2} />
                   </div>
-                  <span className="text-[10px] font-semibold leading-tight">{label}</span>
+                  <span className="text-[10px] landscape:text-[9px] font-semibold leading-tight">{label}</span>
                 </>
               )
             }

@@ -326,7 +326,7 @@ export default function Settings() {
 
       {/* Store Dialog */}
       <Dialog open={storeDialog} onOpenChange={setStoreDialog}>
-        <DialogContent className="max-w-[95vw] rounded-xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader><DialogTitle>Info Toko</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5">
@@ -351,7 +351,7 @@ export default function Settings() {
 
       {/* PM Dialog */}
       <Dialog open={pmDialog} onOpenChange={setPmDialog}>
-        <DialogContent className="max-w-[95vw] rounded-xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-[400px] max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader><DialogTitle>{pmEditId ? 'Edit' : 'Tambah'} Pembayaran</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5"><Label>Nama</Label><Input value={pmName} onChange={e => setPmName(e.target.value)} placeholder="Contoh: Tunai" /></div>
@@ -370,7 +370,7 @@ export default function Settings() {
 
       {/* Category Dialog */}
       <Dialog open={catDialog} onOpenChange={setCatDialog}>
-        <DialogContent className="max-w-[95vw] rounded-xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader><DialogTitle>{catEditId ? 'Edit' : 'Tambah'} Kategori</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5"><Label>Nama Kategori</Label><Input value={catName} onChange={e => setCatName(e.target.value)} /></div>

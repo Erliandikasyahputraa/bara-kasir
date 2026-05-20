@@ -4,14 +4,18 @@ import { db } from '@/lib/db';
 
 // Predefined theme color options with HSL values
 export const THEME_COLORS = [
-  { name: 'Oranye', hue: '25', saturation: '95%', lightness: '53%' },
-  { name: 'Biru', hue: '217', saturation: '91%', lightness: '60%' },
-  { name: 'Hijau', hue: '142', saturation: '71%', lightness: '45%' },
-  { name: 'Ungu', hue: '262', saturation: '83%', lightness: '58%' },
-  { name: 'Merah', hue: '0', saturation: '84%', lightness: '60%' },
-  { name: 'Pink', hue: '330', saturation: '81%', lightness: '60%' },
-  { name: 'Teal', hue: '172', saturation: '66%', lightness: '50%' },
-  { name: 'Kuning', hue: '45', saturation: '93%', lightness: '47%' },
+  { name: 'Oranye (Bara)', hue: '25', saturation: '95%', lightness: '53%' },
+  { name: 'Biru Indigo', hue: '226', saturation: '70%', lightness: '55%' },
+  { name: 'Biru Ocean', hue: '200', saturation: '95%', lightness: '48%' },
+  { name: 'Hijau Emerald', hue: '150', saturation: '84%', lightness: '38%' },
+  { name: 'Hijau Mint', hue: '162', saturation: '60%', lightness: '45%' },
+  { name: 'Ungu Amethyst', hue: '270', saturation: '70%', lightness: '55%' },
+  { name: 'Merah Crimson', hue: '346', saturation: '84%', lightness: '50%' },
+  { name: 'Pink Rose', hue: '325', saturation: '75%', lightness: '60%' },
+  { name: 'Teal Cyan', hue: '180', saturation: '75%', lightness: '40%' },
+  { name: 'Kuning Amber', hue: '38', saturation: '95%', lightness: '50%' },
+  { name: 'Coffee Brown', hue: '28', saturation: '45%', lightness: '45%' },
+  { name: 'Sleek Slate', hue: '215', saturation: '20%', lightness: '45%' },
 ] as const;
 
 export function getThemeHSL(hue: string) {

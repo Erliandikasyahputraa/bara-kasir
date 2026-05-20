@@ -145,7 +145,7 @@ export default function StockInPage() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-[95vw] rounded-xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader><DialogTitle>Tambah Stock In</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5">
