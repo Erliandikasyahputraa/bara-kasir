@@ -63,22 +63,22 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const seedDummyData = async () => {
     const now = new Date();
     const dummyProducts = [
-      { name: 'Nasi Goreng Spesial', sku: 'NG001', categoryId: 1, price: 15000, hpp: 8000, stock: 50, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Mie Goreng', sku: 'MG001', categoryId: 1, price: 12000, hpp: 6000, stock: 40, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Ayam Bakar', sku: 'AB001', categoryId: 1, price: 20000, hpp: 12000, stock: 30, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Sate Ayam (10 tusuk)', sku: 'SA001', categoryId: 1, price: 18000, hpp: 10000, stock: 25, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Bakso Urat', sku: 'BU001', categoryId: 1, price: 15000, hpp: 7000, stock: 35, unit: 'mangkok', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Es Teh Manis', sku: 'ET001', categoryId: 2, price: 5000, hpp: 1500, stock: 100, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Es Jeruk', sku: 'EJ001', categoryId: 2, price: 7000, hpp: 2500, stock: 80, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Kopi Susu', sku: 'KS001', categoryId: 2, price: 10000, hpp: 4000, stock: 60, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Air Mineral', sku: 'AM001', categoryId: 2, price: 4000, hpp: 2000, stock: 120, unit: 'botol', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Tisu', sku: 'TS001', categoryId: 3, price: 2000, hpp: 1000, stock: 200, unit: 'pcs', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Kerupuk', sku: 'KR001', categoryId: 3, price: 3000, hpp: 1500, stock: 150, unit: 'bungkus', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Nasi Goreng Spesial', sku: 'NG001', categoryId: 1, price: 15000, hpp: 8000, stock: 50, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Mie Goreng', sku: 'MG001', categoryId: 1, price: 12000, hpp: 6000, stock: 40, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Ayam Bakar', sku: 'AB001', categoryId: 1, price: 20000, hpp: 12000, stock: 30, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Sate Ayam (10 tusuk)', sku: 'SA001', categoryId: 1, price: 18000, hpp: 10000, stock: 25, unit: 'porsi', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Bakso Urat', sku: 'BU001', categoryId: 1, price: 15000, hpp: 7000, stock: 35, unit: 'mangkok', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Es Teh Manis', sku: 'ET001', categoryId: 2, price: 5000, hpp: 1500, stock: 100, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Es Jeruk', sku: 'EJ001', categoryId: 2, price: 7000, hpp: 2500, stock: 80, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Kopi Susu', sku: 'KS001', categoryId: 2, price: 10000, hpp: 4000, stock: 60, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Air Mineral', sku: 'AM001', categoryId: 2, price: 4000, hpp: 2000, stock: 120, unit: 'botol', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Tisu', sku: 'TS001', categoryId: 3, price: 2000, hpp: 1000, stock: 200, unit: 'pcs', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'Kerupuk', sku: 'KR001', categoryId: 3, price: 3000, hpp: 1500, stock: 150, unit: 'bungkus', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
     ];
 
     const dummySuppliers = [
-      { name: 'PT Bahan Segar', phone: '08111222333', address: 'Jl. Pasar Baru No. 15', notes: 'Supplier sayur & daging', createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'UD Minuman Jaya', phone: '08222333444', address: 'Jl. Raya Industri No. 8', notes: 'Supplier minuman', createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'PT Bahan Segar', phone: '08111222333', address: 'Jl. Pasar Baru No. 15', notes: 'Supplier sayur & daging', createdAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
+      { name: 'UD Minuman Jaya', phone: '08222333444', address: 'Jl. Raya Industri No. 8', notes: 'Supplier minuman', createdAt: now, isDeleted: 0, deletedAt: null, isSynced: 0 },
     ];
 
     await db.products.bulkAdd(dummyProducts);
@@ -90,6 +90,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       subtotal: 40000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 40000,
       paymentMethodId: 1, paymentAmount: 50000, change: 10000, profit: 21000,
       date: new Date(now.getTime() - 3600000), receiptNumber: 'TX-DEMO-001',
+      status: 'completed', isSynced: 0
     });
     await db.transactionItems.bulkAdd([
       { transactionId: tx1Id as number, productId: 1, productName: 'Nasi Goreng Spesial', quantity: 2, price: 15000, hpp: 8000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 30000 },
@@ -100,6 +101,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       subtotal: 30000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 30000,
       paymentMethodId: 3, paymentAmount: 30000, change: 0, profit: 14000,
       date: new Date(now.getTime() - 1800000), receiptNumber: 'TX-DEMO-002',
+      status: 'completed', isSynced: 0
     });
     await db.transactionItems.bulkAdd([
       { transactionId: tx2Id as number, productId: 3, productName: 'Ayam Bakar', quantity: 1, price: 20000, hpp: 12000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 20000 },
@@ -110,6 +112,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       subtotal: 40000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 40000,
       paymentMethodId: 1, paymentAmount: 50000, change: 10000, profit: 18500,
       date: new Date(now.getTime() - 900000), receiptNumber: 'TX-DEMO-003',
+      status: 'completed', isSynced: 0
     });
     await db.transactionItems.bulkAdd([
       { transactionId: tx3Id as number, productId: 1, productName: 'Nasi Goreng Spesial', quantity: 1, price: 15000, hpp: 8000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 15000 },
@@ -140,6 +143,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           onboardingDone: true,
           lastBackupAt: null,
           themeColor,
+          deviceId: crypto.randomUUID(),
+          updatedAt: new Date(),
         });
       }
 
@@ -202,8 +207,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               </h2>
               <p className="text-muted-foreground leading-relaxed max-w-xs mx-auto">
                 {isInstalled || installDone
-                  ? 'KasirGratisan sudah terinstall. Kamu bisa buka langsung dari home screen!'
-                  : 'Install KasirGratisan di HP kamu supaya bisa diakses langsung dari home screen, tanpa buka browser.'}
+                  ? 'Bara Kasir sudah terinstall. Kamu bisa buka langsung dari home screen!'
+                  : 'Install Bara Kasir di HP kamu supaya bisa diakses langsung dari home screen, tanpa buka browser.'}
               </p>
             </div>
             {!isInstalled && !installDone && (
@@ -216,7 +221,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       const ok = await install();
                       if (ok) {
                         setInstallDone(true);
-                        toast.success('Berhasil install KasirGratisan!');
+                        toast.success('Berhasil install Bara Kasir!');
                       }
                     }}
                   >

@@ -23,7 +23,7 @@ export default function Login() {
       });
 
       if (error) throw error;
-      
+
       toast.success('Selamat datang kembali di Bara Kasir! 🔥');
       // Navigasi akan ditangani otomatis oleh auth state listener di App.tsx
     } catch (error: any) {
@@ -36,11 +36,11 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent -z-10" />
-      
+
       <Card className="w-full max-w-[400px] border-0 shadow-2xl shadow-primary/5">
         <CardHeader className="space-y-2 text-center pb-8">
           <div className="mx-auto w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-black text-2xl shadow-lg shadow-primary/20 mb-2">
-            B
+            <img src="public/favicon-32x32.png" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Bara Kasir</CardTitle>
           <CardDescription>
@@ -51,11 +51,11 @@ export default function Login() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="nama@cafe.com" 
-                required 
+              <Input
+                id="email"
+                type="email"
+                placeholder="nama@cafe.com"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="username"
@@ -69,10 +69,10 @@ export default function Login() {
                   Lupa password?
                 </button>
               </div>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
+              <Input
+                id="password"
+                type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"

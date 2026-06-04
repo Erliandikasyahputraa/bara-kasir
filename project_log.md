@@ -5,12 +5,12 @@ Log ini mencatat setiap langkah besar dalam pembangunan aplikasi Bara Kasir.
 ---
 
 ## 📅 12 Mei 2026 (Kickoff & Rebranding)
-- **Analisis Awal:** Membedah aplikasi KasirGratisan sebagai fondasi.
+- **Analisis Awal:** Membedah aplikasi Bara Kasir sebagai fondasi.
 - **Rebranding Total:** 
     - Nama aplikasi diubah menjadi **Bara Kasir**.
-    - Database lokal diubah dari `kasirgratisan-db` menjadi `bara-kasir-db`.
+    - Database lokal diubah dari `barakasir-db` menjadi `bara-kasir-db`.
     - Membersihkan identitas pengembang lama di metadata (package.json, index.html, Settings).
-- **Inisialisasi Repository:** Menghubungkan kode ke GitHub baru: `https://github.com/Erliandikasyahputraa/bara-kasir`.
+- **Inisialisasi Repository:** Menghubungkan kode ke GitHub baru: `https://github.com/fadhillahrizkyakhbar/bara-kasir`.
 - **Desain Logo:** Membuat konsep logo minimalis "Bara" (Api Oranye).
 
 ## 📅 12 Mei 2026 (Cloud Integration - Part 1)

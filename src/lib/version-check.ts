@@ -1,6 +1,6 @@
 import { db } from './db';
 
-const API_URL = 'https://api.kasirgratisan.my.id/webhook/kasir-gratisan/latest-version';
+const API_URL = 'https://api.barakasir.my.id/webhook/bara-kasir/latest-version';
 const TIMEOUT_MS = 5000;
 
 export async function checkVersion(): Promise<void> {

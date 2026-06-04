@@ -1,4 +1,4 @@
-# 🧾 KasirGratisan
+# 🧾 Bara Kasir
 
 A free, offline-first, open source Point of Sale (POS) Progressive Web App built for Indonesian Micro, Small, and Medium Enterprises (UMKM). All data is stored locally on the user's device — no server, no registration, no cost.
 
@@ -57,8 +57,8 @@ A free, offline-first, open source Point of Sale (POS) Progressive Web App built
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/kasirgratisan.git
-cd kasirgratisan
+git clone https://github.com/fadhillahrizkyakhbar/bara-kasir.git
+cd bara-kasir
 
 # Install dependencies
 npm install
@@ -150,7 +150,7 @@ New COGS = ((Old Stock × Old COGS) + (New Qty × Buy Price)) / (Old Stock + New
 
 Got suggestions, feature ideas, or found a bug? Submit and vote on our board:
 
-👉 **[kasirgratisan.fider.io](https://kasirgratisan.fider.io/)**
+👉 **[barakasir.fider.io](https://barakasir.fider.io/)**
 
 ---
 

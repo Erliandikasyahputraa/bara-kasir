@@ -79,7 +79,7 @@ export async function exportBackupData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `kasirgratisan-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `barakasir-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 
